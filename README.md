@@ -14,11 +14,19 @@
   - `physical_modeling_v2_2.html` - v2.2
   - `physical_modeling_v2_3.html` - v2.3
   - `physical_modeling_v2_4.html` - v2.4（最新）
-- `docs/inverter_models_comparison.html` - インバータモデル比較
+- `docs/inverter_models_comparison.html` - インバータモデル比較（GFL/GFM/SGモデル）
 
 ## 使用方法
 
-GitHub Pagesでオンライン閲覧：https://lutelute.github.io/modeling_INV_SG_rms_Model/
+### オンライン閲覧（GitHub Pages）
+
+- **メインコンテンツ**: https://lutelute.github.io/modeling_INV_SG_rms_Model/
+- **インバータモデル比較**: https://lutelute.github.io/modeling_INV_SG_rms_Model/docs/inverter_models_comparison.html
+
+### 教育・学習リソース
+
+1. **物理モデリング基礎** - メインページで物理モデルから状態空間表現への導出過程を学習
+2. **モデル比較研究** - インバータモデル比較ページでGFL/GFM/SGモデルの違いを理解
 
 または、ローカルでHTMLファイルをWebブラウザで開いて、物理モデルの数式展開と状態空間表現への変換過程を確認できます。
 
