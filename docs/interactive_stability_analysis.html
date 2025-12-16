@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>インタラクティブ安定性解析 - SG/GFL/GFM モデル</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0f0f14;
+            --bg-secondary: #1a1a24;
+            --bg-card: #252538;
+            --text-primary: #e8e8ec;
+            --text-secondary: #a1a1aa;
+            --accent-sg: #f59e0b;
+            --accent-gfl: #3b82f6;
+            --accent-gfm: #10b981;
+            --border: #3f3f46;
+            --success: #22c55e;
+            --warning: #eab308;
+            --danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--accent-sg), var(--accent-gfl), var(--accent-gfm));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .control-panel {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .model-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background: var(--accent-gfl);
+            color: white;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+        }
+
+        .parameter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .parameter-group {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .parameter-group h3 {
+            color: var(--accent-gfl);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        input[type="range"], input[type="number"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Source Code Pro', monospace;
+        }
+
+        input[type="range"] {
+            height: 6px;
+            background: var(--border);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-gfl);
+            cursor: pointer;
+        }
+
+        .range-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .range-display input[type="range"] {
+            flex: 1;
+        }
+
+        .range-display input[type="number"] {
+            width: 80px;
+            padding: 0.25rem;
+        }
+
+        .analysis-button {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-gfl), var(--accent-gfm));
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .analysis-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .results-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .plot-container {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            height: 500px;
+        }
+
+        .stability-indicator {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid var(--border);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .stability-status {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .stability-status.stable {
+            color: var(--success);
+        }
+
+        .stability-status.unstable {
+            color: var(--danger);
+        }
+
+        .stability-status.marginal {
+            color: var(--warning);
+        }
+
+        .eigenvalue-list {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.9rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .model-info {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--accent-gfl);
+        }
+
+        @media (max-width: 768px) {
+            .results-panel {
+                grid-template-columns: 1fr;
+            }
+            
+            .parameter-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            body {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>インタラクティブ安定性解析ツール</h1>
+        
+        <div class="control-panel">
+            <div class="model-tabs">
+                <button class="tab active" onclick="selectModel('sg')">同期発電機 (SG)</button>
+                <button class="tab" onclick="selectModel('gfl')">Grid-Following (GFL)</button>
+                <button class="tab" onclick="selectModel('gfm')">Grid-Forming (GFM)</button>
+            </div>
+
+            <div class="model-info" id="modelInfo">
+                <strong>同期発電機モデル</strong><br>
+                古典的な同期発電機の小信号モデル。回転子角度δと角速度ωを状態変数とする2次システム。
+            </div>
+
+            <div class="parameter-grid" id="parameterGrid">
+                <!-- パラメータ入力フォームがここに動的に生成される -->
+            </div>
+
+            <button class="analysis-button" onclick="performAnalysis()">
+                安定性解析を実行
+            </button>
+        </div>
+
+        <div class="stability-indicator" id="stabilityIndicator" style="display: none;">
+            <div class="stability-status" id="stabilityStatus">解析中...</div>
+            <div id="stabilityDetails"></div>
+        </div>
+
+        <div class="results-panel">
+            <div class="plot-container">
+                <div id="eigenvaluePlot"></div>
+            </div>
+            <div class="plot-container">
+                <div id="timeDomainPlot"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentModel = 'sg';
+        let modelParameters = {
+            sg: {
+                H: { value: 5.0, min: 1.0, max: 10.0, step: 0.1, unit: 's', description: '慣性定数' },
+                D: { value: 2.0, min: 0.1, max: 10.0, step: 0.1, unit: 'p.u.', description: '制動係数' },
+                Pm: { value: 1.0, min: 0.1, max: 2.0, step: 0.1, unit: 'p.u.', description: '機械的入力' },
+                V: { value: 1.0, min: 0.8, max: 1.2, step: 0.01, unit: 'p.u.', description: '端子電圧' },
+                X: { value: 0.3, min: 0.1, max: 1.0, step: 0.01, unit: 'p.u.', description: 'リアクタンス' }
+            },
+            gfl: {
+                Kp_pll: { value: 10.0, min: 1.0, max: 50.0, step: 1.0, unit: '-', description: 'PLL比例ゲイン' },
+                Ki_pll: { value: 100.0, min: 10.0, max: 500.0, step: 10.0, unit: '-', description: 'PLL積分ゲイン' },
+                Kp_i: { value: 0.5, min: 0.1, max: 2.0, step: 0.1, unit: '-', description: '電流制御比例ゲイン' },
+                Ki_i: { value: 50.0, min: 10.0, max: 200.0, step: 10.0, unit: '-', description: '電流制御積分ゲイン' },
+                L: { value: 0.1, min: 0.05, max: 0.5, step: 0.01, unit: 'p.u.', description: 'フィルタインダクタンス' },
+                R: { value: 0.01, min: 0.001, max: 0.1, step: 0.001, unit: 'p.u.', description: 'フィルタ抵抗' },
+                Vdc: { value: 1.2, min: 1.0, max: 1.5, step: 0.01, unit: 'p.u.', description: 'DC電圧' }
+            },
+            gfm: {
+                Kp_v: { value: 1.0, min: 0.1, max: 5.0, step: 0.1, unit: '-', description: '電圧制御比例ゲイン' },
+                Ki_v: { value: 100.0, min: 10.0, max: 500.0, step: 10.0, unit: '-', description: '電圧制御積分ゲイン' },
+                Kp_i: { value: 0.8, min: 0.1, max: 2.0, step: 0.1, unit: '-', description: '電流制御比例ゲイン' },
+                Ki_i: { value: 80.0, min: 10.0, max: 200.0, step: 10.0, unit: '-', description: '電流制御積分ゲイン' },
+                L: { value: 0.08, min: 0.03, max: 0.3, step: 0.01, unit: 'p.u.', description: 'フィルタインダクタンス' },
+                C: { value: 0.05, min: 0.01, max: 0.2, step: 0.01, unit: 'p.u.', description: 'フィルタキャパシタンス' },
+                R: { value: 0.005, min: 0.001, max: 0.05, step: 0.001, unit: 'p.u.', description: 'フィルタ抵抗' },
+                Droop: { value: 0.05, min: 0.01, max: 0.2, step: 0.01, unit: '-', description: 'ドループ定数' }
+            }
+        };
+
+        function selectModel(model) {
+            currentModel = model;
+            
+            // タブの状態を更新
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (model === 'sg') tab.style.background = 'var(--accent-sg)';
+                else if (model === 'gfl') tab.style.background = 'var(--accent-gfl)';
+                else if (model === 'gfm') tab.style.background = 'var(--accent-gfm)';
+            });
+            event.target.classList.add('active');
+            
+            // モデル情報を更新
+            const modelInfo = document.getElementById('modelInfo');
+            const modelDescriptions = {
+                sg: '<strong>同期発電機モデル</strong><br>古典的な同期発電機の小信号モデル。回転子角度δと角速度ωを状態変数とする2次システム。',
+                gfl: '<strong>Grid-Following インバータ</strong><br>PLL（Phase-Locked Loop）により系統に同期し、電流制御により有効・無効電力を制御するインバータモデル。',
+                gfm: '<strong>Grid-Forming インバータ</strong><br>自らが電圧源として動作し、ドループ制御により周波数・電圧を制御するインバータモデル。'
+            };
+            modelInfo.innerHTML = modelDescriptions[model];
+            
+            // パラメータグリッドを更新
+            generateParameterInputs();
+            
+            // 結果をクリア
+            clearResults();
+        }
+
+        function generateParameterInputs() {
+            const grid = document.getElementById('parameterGrid');
+            grid.innerHTML = '';
+            
+            const params = modelParameters[currentModel];
+            const paramGroups = {
+                sg: [
+                    { title: '機械系パラメータ', params: ['H', 'D', 'Pm'] },
+                    { title: '電気系パラメータ', params: ['V', 'X'] }
+                ],
+                gfl: [
+                    { title: 'PLL制御', params: ['Kp_pll', 'Ki_pll'] },
+                    { title: '電流制御', params: ['Kp_i', 'Ki_i'] },
+                    { title: '回路パラメータ', params: ['L', 'R', 'Vdc'] }
+                ],
+                gfm: [
+                    { title: '電圧制御', params: ['Kp_v', 'Ki_v'] },
+                    { title: '電流制御', params: ['Kp_i', 'Ki_i'] },
+                    { title: '回路パラメータ', params: ['L', 'C', 'R'] },
+                    { title: 'ドループ制御', params: ['Droop'] }
+                ]
+            };
+            
+            paramGroups[currentModel].forEach(group => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'parameter-group';
+                
+                let groupHTML = `<h3>${group.title}</h3>`;
+                
+                group.params.forEach(paramName => {
+                    const param = params[paramName];
+                    groupHTML += `
+                        <div class="input-group">
+                            <label>${param.description} (${param.unit})</label>
+                            <div class="range-display">
+                                <input type="range" 
+                                       id="range_${paramName}" 
+                                       min="${param.min}" 
+                                       max="${param.max}" 
+                                       step="${param.step}" 
+                                       value="${param.value}"
+                                       oninput="updateParameter('${paramName}', this.value)">
+                                <input type="number" 
+                                       id="number_${paramName}" 
+                                       min="${param.min}" 
+                                       max="${param.max}" 
+                                       step="${param.step}" 
+                                       value="${param.value}"
+                                       onchange="updateParameter('${paramName}', this.value)">
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                groupDiv.innerHTML = groupHTML;
+                grid.appendChild(groupDiv);
+            });
+        }
+
+        function updateParameter(paramName, value) {
+            const numValue = parseFloat(value);
+            modelParameters[currentModel][paramName].value = numValue;
+            
+            // 両方の入力要素を同期
+            document.getElementById(`range_${paramName}`).value = numValue;
+            document.getElementById(`number_${paramName}`).value = numValue;
+        }
+
+        function performAnalysis() {
+            const params = modelParameters[currentModel];
+            let eigenvalues, stateMatrix;
+            
+            try {
+                switch(currentModel) {
+                    case 'sg':
+                        ({ eigenvalues, stateMatrix } = analyzeSG(params));
+                        break;
+                    case 'gfl':
+                        ({ eigenvalues, stateMatrix } = analyzeGFL(params));
+                        break;
+                    case 'gfm':
+                        ({ eigenvalues, stateMatrix } = analyzeGFM(params));
+                        break;
+                }
+                
+                displayResults(eigenvalues, stateMatrix);
+            } catch (error) {
+                console.error('解析エラー:', error);
+                alert('解析中にエラーが発生しました: ' + error.message);
+            }
+        }
+
+        function analyzeSG(params) {
+            const H = params.H.value;
+            const D = params.D.value;
+            const Pm = params.Pm.value;
+            const V = params.V.value;
+            const X = params.X.value;
+            
+            // 同期発電機の線形化状態方程式 [dδ/dt; dω/dt] = A[δ; ω]
+            const omega0 = 2 * Math.PI * 50; // 基準角周波数
+            const Pe0 = Pm; // 平衡点での電気的出力
+            const dPe_ddelta = (V * V / X) * Math.cos(Math.asin(Pe0 * X / (V * V))); // ∂Pe/∂δ
+            
+            const stateMatrix = [
+                [0, 1],
+                [-dPe_ddelta / (2 * H), -D / (2 * H)]
+            ];
+            
+            // 固有値計算
+            const eigenvalues = math.eigs(stateMatrix).values;
+            
+            return { eigenvalues, stateMatrix };
+        }
+
+        function analyzeGFL(params) {
+            const Kp_pll = params.Kp_pll.value;
+            const Ki_pll = params.Ki_pll.value;
+            const Kp_i = params.Kp_i.value;
+            const Ki_i = params.Ki_i.value;
+            const L = params.L.value;
+            const R = params.R.value;
+            
+            // GFLインバータの簡略化した状態方程式
+            // 状態変数: [θ_pll, ∫e_pll, i_d, i_q, ∫e_id, ∫e_iq]
+            const omega_base = 2 * Math.PI * 50;
+            
+            const stateMatrix = [
+                [0, Kp_pll, 0, 0, 0, 0],
+                [1, 0, 0, 0, 0, 0],
+                [0, 0, -R/L, omega_base, -Kp_i/L, 0],
+                [0, 0, -omega_base, -R/L, 0, -Kp_i/L],
+                [1, 0, 0, 0, 0, 0],
+                [0, 0, 0, 1, 0, 0]
+            ];
+            
+            // 実際のGFLシステムはより複雑だが、簡略化
+            const simplifiedMatrix = [
+                [-Kp_pll * 0.1, Ki_pll],
+                [-1, -0.5],
+                [0, 0, -R/L, omega_base],
+                [0, 0, -omega_base, -R/L]
+            ];
+            
+            const eigenvalues = math.eigs(simplifiedMatrix.slice(0,2)).values.concat(
+                math.eigs([[-R/L, omega_base], [-omega_base, -R/L]]).values
+            );
+            
+            return { eigenvalues, stateMatrix: simplifiedMatrix };
+        }
+
+        function analyzeGFM(params) {
+            const Kp_v = params.Kp_v.value;
+            const Ki_v = params.Ki_v.value;
+            const Kp_i = params.Kp_i.value;
+            const Ki_i = params.Ki_i.value;
+            const L = params.L.value;
+            const C = params.C.value;
+            const R = params.R.value;
+            const Droop = params.Droop.value;
+            
+            // GFMインバータの状態方程式（簡略化）
+            // 状態変数: [v_od, v_oq, i_ld, i_lq, ∫e_vd, ∫e_vq]
+            const omega_base = 2 * Math.PI * 50;
+            
+            const stateMatrix = [
+                [0, omega_base, -1/C, 0, 0, 0],
+                [-omega_base, 0, 0, -1/C, 0, 0],
+                [Kp_v/L, 0, -R/L, omega_base, Ki_v/L, 0],
+                [0, Kp_v/L, -omega_base, -R/L, 0, Ki_v/L],
+                [1, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0]
+            ];
+            
+            // ドループ制御の影響を追加（簡略化）
+            stateMatrix[0][0] -= Droop * 0.1;
+            stateMatrix[1][1] -= Droop * 0.1;
+            
+            const eigenvalues = math.eigs(stateMatrix).values;
+            
+            return { eigenvalues, stateMatrix };
+        }
+
+        function displayResults(eigenvalues, stateMatrix) {
+            // 安定性判定
+            const isStable = eigenvalues.every(ev => {
+                const real = typeof ev === 'object' ? ev.re : ev;
+                return real < 0;
+            });
+            
+            const maxRealPart = Math.max(...eigenvalues.map(ev => 
+                typeof ev === 'object' ? ev.re : ev
+            ));
+            
+            // 安定性インジケータの更新
+            const indicator = document.getElementById('stabilityIndicator');
+            const status = document.getElementById('stabilityStatus');
+            const details = document.getElementById('stabilityDetails');
+            
+            indicator.style.display = 'block';
+            
+            if (isStable) {
+                status.textContent = 'システムは安定';
+                status.className = 'stability-status stable';
+                details.innerHTML = `最大実部: ${maxRealPart.toFixed(4)}`;
+            } else if (maxRealPart < 0.1) {
+                status.textContent = '限界安定';
+                status.className = 'stability-status marginal';
+                details.innerHTML = `最大実部: ${maxRealPart.toFixed(4)} (限界付近)`;
+            } else {
+                status.textContent = 'システムは不安定';
+                status.className = 'stability-status unstable';
+                details.innerHTML = `最大実部: ${maxRealPart.toFixed(4)}`;
+            }
+            
+            // 固有値プロット
+            plotEigenvalues(eigenvalues);
+            
+            // 時間応答プロット
+            plotTimeResponse(stateMatrix, eigenvalues);
+        }
+
+        function plotEigenvalues(eigenvalues) {
+            const realParts = eigenvalues.map(ev => typeof ev === 'object' ? ev.re : ev);
+            const imagParts = eigenvalues.map(ev => typeof ev === 'object' ? ev.im || 0 : 0);
+            
+            const trace = {
+                x: realParts,
+                y: imagParts,
+                mode: 'markers',
+                type: 'scatter',
+                marker: {
+                    size: 12,
+                    color: realParts.map(r => r < 0 ? 'green' : 'red'),
+                    line: { width: 2, color: 'white' }
+                },
+                name: '固有値'
+            };
+            
+            const layout = {
+                title: '固有値プロット (s平面)',
+                xaxis: { title: '実部' },
+                yaxis: { title: '虚部' },
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: 'white' },
+                shapes: [{
+                    type: 'line',
+                    x0: 0, x1: 0,
+                    y0: Math.min(...imagParts) - 1,
+                    y1: Math.max(...imagParts) + 1,
+                    line: { color: 'white', dash: 'dash' }
+                }],
+                showlegend: false
+            };
+            
+            Plotly.newPlot('eigenvaluePlot', [trace], layout, {responsive: true});
+        }
+
+        function plotTimeResponse(stateMatrix, eigenvalues) {
+            // 簡単な時間応答シミュレーション
+            const t = [];
+            const response = [];
+            const dt = 0.01;
+            const tMax = 5;
+            
+            // 初期条件（小さな擾乱）
+            let x = [0.1, 0]; // 2状態変数の場合の例
+            
+            for (let time = 0; time <= tMax; time += dt) {
+                t.push(time);
+                response.push(x[0]); // 最初の状態変数をプロット
+                
+                // 簡単なオイラー積分（実際には4次ルンゲクッタなどを使用すべき）
+                const dx = math.multiply(stateMatrix.slice(0, Math.min(2, stateMatrix.length)), x);
+                x = math.add(x, math.multiply(dx, dt));
+                
+                if (x.length < 2) x = [x, 0]; // 安全のため
+            }
+            
+            const trace = {
+                x: t,
+                y: response,
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: 'cyan', width: 2 },
+                name: '状態応答'
+            };
+            
+            const layout = {
+                title: 'ステップ応答',
+                xaxis: { title: '時間 [s]' },
+                yaxis: { title: '状態変数' },
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: 'white' },
+                showlegend: false
+            };
+            
+            Plotly.newPlot('timeDomainPlot', [trace], layout, {responsive: true});
+        }
+
+        function clearResults() {
+            document.getElementById('stabilityIndicator').style.display = 'none';
+            Plotly.purge('eigenvaluePlot');
+            Plotly.purge('timeDomainPlot');
+        }
+
+        // 初期化
+        generateParameterInputs();
+    </script>
+</body>
+</html>

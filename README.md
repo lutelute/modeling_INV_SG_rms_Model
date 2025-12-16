@@ -15,6 +15,7 @@
   - `physical_modeling_v2_3.html` - v2.3
   - `physical_modeling_v2_4.html` - v2.4（最新）
 - `docs/inverter_models_comparison.html` - インバータモデル比較（GFL/GFM/SGモデル）
+- `docs/interactive_stability_analysis.html` - インタラクティブ安定性解析ツール
 
 ## 使用方法
 
@@ -22,11 +23,18 @@
 
 - **メインコンテンツ**: https://lutelute.github.io/modeling_INV_SG_rms_Model/
 - **インバータモデル比較**: https://lutelute.github.io/modeling_INV_SG_rms_Model/docs/inverter_models_comparison.html
+- **🎯 安定性解析ツール**: https://lutelute.github.io/modeling_INV_SG_rms_Model/docs/interactive_stability_analysis.html
 
 ### 教育・学習リソース
 
 1. **物理モデリング基礎** - メインページで物理モデルから状態空間表現への導出過程を学習
 2. **モデル比較研究** - インバータモデル比較ページでGFL/GFM/SGモデルの違いを理解
+3. **🔧 インタラクティブ安定性解析** - パラメータを調整してリアルタイムで安定性を評価
+   - 同期発電機（SG）モデル
+   - Grid-Following（GFL）インバータ
+   - Grid-Forming（GFM）インバータ
+   - 固有値プロット（s平面）
+   - ステップ応答解析
 
 または、ローカルでHTMLファイルをWebブラウザで開いて、物理モデルの数式展開と状態空間表現への変換過程を確認できます。
 
