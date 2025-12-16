@@ -6,7 +6,15 @@
 
 ## ファイル構成
 
-- `index.html` - 物理モデルから状態空間表現への導出を説明するHTMLドキュメント
+- `index.html` - 物理モデルから状態空間表現への導出を説明するHTMLドキュメント（最新版）
+- `docs/versions/` - 過去のバージョン
+  - `physical_modeling_derivation.html` - 初期版
+  - `physical_modeling_v2.html` - v2.0
+  - `physical_modeling_v2_1.html` - v2.1  
+  - `physical_modeling_v2_2.html` - v2.2
+  - `physical_modeling_v2_3.html` - v2.3
+  - `physical_modeling_v2_4.html` - v2.4（最新）
+- `docs/inverter_models_comparison.html` - インバータモデル比較
 
 ## 使用方法
 

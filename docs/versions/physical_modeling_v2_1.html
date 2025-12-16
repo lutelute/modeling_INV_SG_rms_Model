@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物理モデルから状態空間表現への導出</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false}
+            ]
+        });"></script>
+    <style>
+        :root {
+            --bg-primary: #fafafa;
+            --bg-secondary: #ffffff;
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a4a6a;
+            --accent-blue: #2563eb;
+            --accent-green: #059669;
+            --accent-orange: #d97706;
+            --accent-red: #dc2626;
+            --accent-purple: #7c3aed;
+            --border: #e5e5e5;
+            --highlight-yellow: #fef3c7;
+            --highlight-blue: #dbeafe;
+            --highlight-green: #d1fae5;
+            --highlight-pink: #fce7f3;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 2;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 1rem;
+        }
+        
+        h2 {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 1.5rem;
+            margin: 2.5rem 0 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--accent-blue);
+        }
+        
+        h3 {
+            font-size: 1.2rem;
+            margin: 2rem 0 1rem;
+            color: var(--accent-blue);
+        }
+        
+        h4 {
+            font-size: 1.05rem;
+            margin: 1.5rem 0 0.75rem;
+        }
+        
+        p { margin: 1rem 0; text-align: justify; }
+        
+        /* Nomenclature Table */
+        .nomenclature {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .nomenclature h3 {
+            margin-top: 0;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+        
+        .nomenclature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .nomenclature-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        
+        .nomenclature-section h4 {
+            margin: 0 0 0.75rem 0;
+            font-size: 0.95rem;
+            color: var(--accent-blue);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+        
+        .nom-table {
+            width: 100%;
+            font-size: 0.9rem;
+            border-collapse: collapse;
+        }
+        
+        .nom-table td {
+            padding: 0.4rem 0.5rem;
+            vertical-align: top;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .nom-table td:first-child {
+            width: 80px;
+            font-weight: 500;
+            color: var(--accent-purple);
+        }
+        
+        .nom-table td:last-child {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        
+        /* Equation boxes */
+        .eq-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent-blue);
+            border-radius: 0 8px 8px 0;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+        
+        .eq-box.physical {
+            border-left-color: var(--accent-green);
+            background: var(--highlight-green);
+        }
+        
+        .eq-box.state-space {
+            border-left-color: var(--accent-purple);
+            background: var(--highlight-blue);
+        }
+        
+        .eq-box.important {
+            border-left-color: var(--accent-orange);
+            background: var(--highlight-yellow);
+        }
+        
+        .eq-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .eq-content {
+            font-size: 1.1rem;
+            line-height: 2.5;
+        }
+        
+        /* Circuit diagram container */
+        .circuit-container {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+        
+        .circuit-svg {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        /* Step boxes */
+        .step-box {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .step-number {
+            width: 36px;
+            height: 36px;
+            background: var(--accent-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+        
+        .step-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .derivation-arrow {
+            text-align: center;
+            font-size: 2rem;
+            color: var(--accent-blue);
+            margin: 1rem 0;
+        }
+        
+        /* Tables */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border: 1px solid var(--border);
+        }
+        
+        .comparison-table th {
+            background: var(--highlight-blue);
+            font-weight: 600;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        /* Note box */
+        .note {
+            background: var(--highlight-yellow);
+            border-left: 4px solid var(--accent-orange);
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .note-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Physical law card */
+        .law-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .law-card h4 {
+            color: white;
+            margin-top: 0;
+        }
+        
+        .law-card .eq-content {
+            background: rgba(255,255,255,0.15);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        
+        .section-divider {
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green), var(--accent-orange));
+            border-radius: 2px;
+            margin: 3rem 0;
+        }
+        
+        /* TOC */
+        .toc {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .toc h3 {
+            margin-top: 0;
+            color: var(--text-primary);
+        }
+        
+        .toc ol {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+        
+        .toc li {
+            margin: 0.5rem 0;
+        }
+        
+        .toc a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        
+        /* KaTeX adjustments */
+        .katex { font-size: 1.1em; }
+        .katex-display { margin: 1rem 0; overflow-x: auto; }
+        
+        /* Colored variables in equations */
+        .var-state { color: var(--accent-purple); }
+        .var-input { color: var(--accent-blue); }
+        .var-param { color: var(--accent-green); }
+        .var-output { color: var(--accent-orange); }
+        
+        /* Appendix styling */
+        .appendix {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .appendix h2 {
+            border-bottom-color: var(--accent-green);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>物理モデルから状態空間表現への導出</h1>
+        <p class="subtitle">Physical Modeling → State-Space Representation</p>
+        
+        <!-- Nomenclature Section -->
+        <div class="nomenclature">
+            <h3>📋 記号一覧（Nomenclature）</h3>
+            <div class="nomenclature-grid">
+                <!-- State Variables -->
+                <div class="nomenclature-section">
+                    <h4>状態変数（State Variables）</h4>
+                    <table class="nom-table">
+                        <tr><td>$i_L$</td><td>インダクタ電流 [A]</td></tr>
+                        <tr><td>$i_{Ld}, i_{Lq}$</td><td>インダクタ電流（dq軸）[A]</td></tr>
+                        <tr><td>$v_o$</td><td>コンデンサ（出力）電圧 [V]</td></tr>
+                        <tr><td>$v_{od}, v_{oq}$</td><td>出力電圧（dq軸）[V]</td></tr>
+                        <tr><td>$i_o$</td><td>出力電流 [A]</td></tr>
+                        <tr><td>$i_{od}, i_{oq}$</td><td>出力電流（dq軸）[A]</td></tr>
+                        <tr><td>$\omega$</td><td>角速度 [rad/s]</td></tr>
+                        <tr><td>$\theta$</td><td>位相角 [rad]</td></tr>
+                        <tr><td>$\varepsilon$</td><td>積分器状態</td></tr>
+                        <tr><td>$E'_q$</td><td>過渡内部起電力 [V]</td></tr>
+                    </table>
+                </div>
+                
+                <!-- Parameters -->
+                <div class="nomenclature-section">
+                    <h4>パラメータ（Parameters）</h4>
+                    <table class="nom-table">
+                        <tr><td>$L_f$</td><td>フィルタインダクタンス [H]</td></tr>
+                        <tr><td>$R_f$</td><td>フィルタ抵抗 [Ω]</td></tr>
+                        <tr><td>$C_f$</td><td>フィルタ容量 [F]</td></tr>
+                        <tr><td>$L_c$</td><td>結合インダクタンス [H]</td></tr>
+                        <tr><td>$J$</td><td>慣性モーメント [kg·m²]</td></tr>
+                        <tr><td>$D$</td><td>制動（ダンピング）係数</td></tr>
+                        <tr><td>$X_d, X_q$</td><td>同期リアクタンス [Ω]</td></tr>
+                        <tr><td>$X'_d$</td><td>過渡リアクタンス [Ω]</td></tr>
+                        <tr><td>$T'_{d0}$</td><td>開回路過渡時定数 [s]</td></tr>
+                        <tr><td>$\omega_0$</td><td>同期角速度 [rad/s]</td></tr>
+                    </table>
+                </div>
+                
+                <!-- Inputs -->
+                <div class="nomenclature-section">
+                    <h4>入力（Inputs）</h4>
+                    <table class="nom-table">
+                        <tr><td>$v_{inv}$</td><td>インバータ出力電圧 [V]</td></tr>
+                        <tr><td>$v_g$</td><td>系統電圧 [V]</td></tr>
+                        <tr><td>$T_m$</td><td>機械トルク [N·m]</td></tr>
+                        <tr><td>$v_{ex}$</td><td>励磁電圧 [V]</td></tr>
+                        <tr><td>$P_0$</td><td>有効電力指令値 [W]</td></tr>
+                    </table>
+                </div>
+                
+                <!-- Subscripts -->
+                <div class="nomenclature-section">
+                    <h4>添字（Subscripts）</h4>
+                    <table class="nom-table">
+                        <tr><td>$d, q$</td><td>dq回転座標系の軸</td></tr>
+                        <tr><td>$L$</td><td>インダクタ関連</td></tr>
+                        <tr><td>$o$</td><td>出力（output）</td></tr>
+                        <tr><td>$f$</td><td>フィルタ（filter）</td></tr>
+                        <tr><td>$c$</td><td>結合（coupling）</td></tr>
+                        <tr><td>$m$</td><td>機械的（mechanical）</td></tr>
+                        <tr><td>$e$</td><td>電気的（electrical）</td></tr>
+                        <tr><td>$i$</td><td>積分器（integrator）</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Table of Contents -->
+        <div class="toc">
+            <h3>目次</h3>
+            <ol>
+                <li><a href="#section1">基本的な物理法則の復習</a></li>
+                <li><a href="#section2">LCフィルタの物理モデル（インバータ共通）</a></li>
+                <li><a href="#section3">送電線の物理モデル</a></li>
+                <li><a href="#section4">PLLの物理モデル（GFL）</a></li>
+                <li><a href="#section5">ドループ/VSG制御（GFM）</a></li>
+                <li><a href="#section6">同期発電機の物理モデル（SG）</a></li>
+                <li><a href="#section7">状態空間表現への統合</a></li>
+            </ol>
+        </div>
+        
+        <!-- Section 1: Basic Physical Laws -->
+        <h2 id="section1">1. 基本的な物理法則の復習</h2>
+        
+        <p>電力システムのモデル化は、いくつかの基本的な物理法則に基づいています。</p>
+        
+        <h3>1.1 機械系：ニュートンの運動方程式</h3>
+        
+        <div class="law-card">
+            <h4>回転体の運動方程式</h4>
+            <p>回転体（発電機のロータなど）の角運動量保存則：</p>
+            <div class="eq-content">
+                $$ J \frac{d\omega}{dt} = \sum \tau = \tau_{\text{機械}} - \tau_{\text{電気}} - \tau_{\text{損失}} $$
+            </div>
+        </div>
+        
+        <p>これを標準的な2次系の形で書くと：</p>
+        
+        <div class="eq-box physical">
+            <div class="eq-title">機械系の標準形（質量-ダンパ-バネ系との対比）</div>
+            <div class="eq-content">
+                $$ J \frac{d\omega}{dt} + D \omega = \tau_{\text{in}} - \tau_{\text{load}} $$
+                
+                <table class="nom-table" style="margin-top: 1rem;">
+                    <tr><td>$J$</td><td>慣性モーメント [kg·m²] ← 質量 $M$ に相当</td></tr>
+                    <tr><td>$D$</td><td>制動係数 [N·m·s/rad] ← 粘性係数に相当</td></tr>
+                    <tr><td>$\omega$</td><td>角速度 [rad/s] ← 速度 $v$ に相当</td></tr>
+                    <tr><td>$\tau_{\text{in}}$</td><td>入力トルク [N·m] ← 外力 $F$ に相当</td></tr>
+                </table>
+            </div>
+        </div>
+        
+        <h3>1.2 電気系：キルヒホッフの法則</h3>
+        
+        <div class="law-card">
+            <h4>キルヒホッフの電圧則（KVL）</h4>
+            <p>閉回路に沿った電圧降下の和はゼロ：</p>
+            <div class="eq-content">
+                $$ \sum_k v_k = 0 \quad \text{（閉ループ上）} $$
+            </div>
+        </div>
+        
+        <div class="law-card" style="margin-top: 1rem;">
+            <h4>キルヒホッフの電流則（KCL）</h4>
+            <p>節点に流入する電流の和はゼロ：</p>
+            <div class="eq-content">
+                $$ \sum_k i_k = 0 \quad \text{（節点上）} $$
+            </div>
+        </div>
+        
+        <h3>1.3 回路素子の特性方程式</h3>
+        
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>素子</th>
+                    <th>特性方程式</th>
+                    <th>エネルギー蓄積</th>
+                    <th>状態変数</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>抵抗 $R$</strong></td>
+                    <td>$v = Ri$</td>
+                    <td>なし（散逸）</td>
+                    <td>−</td>
+                </tr>
+                <tr>
+                    <td><strong>インダクタ $L$</strong></td>
+                    <td>$v = L \dfrac{di}{dt}$</td>
+                    <td>磁気エネルギー $\frac{1}{2}Li^2$</td>
+                    <td>電流 $i$</td>
+                </tr>
+                <tr>
+                    <td><strong>コンデンサ $C$</strong></td>
+                    <td>$i = C \dfrac{dv}{dt}$</td>
+                    <td>静電エネルギー $\frac{1}{2}Cv^2$</td>
+                    <td>電圧 $v$</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="note">
+            <div class="note-title">💡 状態変数の選び方</div>
+            <p>状態変数は「エネルギーを蓄積する素子」の変数を選びます：</p>
+            <ul>
+                <li>インダクタ → <strong>電流 $i$</strong> を状態変数に</li>
+                <li>コンデンサ → <strong>電圧 $v$</strong> を状態変数に</li>
+                <li>回転体 → <strong>角速度 $\omega$</strong>（と角度 $\theta$）を状態変数に</li>
+            </ul>
+        </div>
+        
+        <div class="section-divider"></div>
+        
+        <!-- Section 2: LC Filter -->
+        <h2 id="section2">2. LCフィルタの物理モデル（インバータ共通）</h2>
+        
+        <p>GFLとGFMインバータはどちらも出力にLCフィルタを持っています。この回路の物理モデルから状態方程式を導出します。</p>
+        
+        <h3>2.1 回路図</h3>
+        
+        <div class="circuit-container">
+            <svg class="circuit-svg" viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg">
+                <rect width="700" height="280" fill="white"/>
+                <text x="350" y="25" text-anchor="middle" font-weight="bold" font-size="14" fill="#1a1a2e">LCフィルタ回路（単相等価回路）</text>
+                
+                <!-- Inverter bridge output -->
+                <rect x="50" y="100" width="60" height="80" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+                <text x="80" y="140" text-anchor="middle" font-size="11" fill="#2563eb">PWM</text>
+                <text x="80" y="158" text-anchor="middle" font-size="12" fill="#2563eb" font-style="italic">v</text>
+                <text x="93" y="163" text-anchor="middle" font-size="9" fill="#2563eb">inv</text>
+                
+                <line x1="110" y1="140" x2="150" y2="140" stroke="#1a1a2e" stroke-width="2"/>
+                
+                <!-- Inductor Lf -->
+                <rect x="150" y="125" width="80" height="30" fill="#d1fae5" stroke="#059669" stroke-width="2" rx="4"/>
+                <text x="175" y="145" text-anchor="middle" font-size="12" fill="#059669" font-style="italic">L</text>
+                <text x="183" y="149" text-anchor="middle" font-size="9" fill="#059669">f</text>
+                <text x="195" y="145" text-anchor="middle" font-size="12" fill="#059669">,</text>
+                <text x="210" y="145" text-anchor="middle" font-size="12" fill="#059669" font-style="italic">R</text>
+                <text x="220" y="149" text-anchor="middle" font-size="9" fill="#059669">f</text>
+                
+                <!-- Current arrow i_L -->
+                <path d="M 170 115 L 190 115 L 185 110 M 190 115 L 185 120" stroke="#7c3aed" stroke-width="2" fill="none"/>
+                <text x="175" y="105" text-anchor="middle" font-size="12" fill="#7c3aed" font-style="italic">i</text>
+                <text x="183" y="109" text-anchor="middle" font-size="9" fill="#7c3aed">L</text>
+                
+                <line x1="230" y1="140" x2="320" y2="140" stroke="#1a1a2e" stroke-width="2"/>
+                <circle cx="320" cy="140" r="4" fill="#1a1a2e"/>
+                
+                <!-- Capacitor Cf -->
+                <line x1="320" y1="140" x2="320" y2="170" stroke="#1a1a2e" stroke-width="2"/>
+                <rect x="305" y="170" width="30" height="20" fill="#fef3c7" stroke="#d97706" stroke-width="2" rx="2"/>
+                <text x="315" y="184" text-anchor="middle" font-size="12" fill="#d97706" font-style="italic">C</text>
+                <text x="325" y="188" text-anchor="middle" font-size="9" fill="#d97706">f</text>
+                <line x1="320" y1="190" x2="320" y2="220" stroke="#1a1a2e" stroke-width="2"/>
+                
+                <!-- Voltage label v_o -->
+                <text x="350" y="170" font-size="12" fill="#d97706" font-style="italic">v</text>
+                <text x="358" y="174" font-size="9" fill="#d97706">o</text>
+                
+                <!-- Ground -->
+                <line x1="310" y1="220" x2="330" y2="220" stroke="#1a1a2e" stroke-width="2"/>
+                <line x1="315" y1="225" x2="325" y2="225" stroke="#1a1a2e" stroke-width="1.5"/>
+                <line x1="318" y1="230" x2="322" y2="230" stroke="#1a1a2e" stroke-width="1"/>
+                
+                <!-- Output inductor -->
+                <line x1="320" y1="140" x2="400" y2="140" stroke="#1a1a2e" stroke-width="2"/>
+                <rect x="400" y="125" width="80" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+                <text x="435" y="145" text-anchor="middle" font-size="12" fill="#2563eb" font-style="italic">L</text>
+                <text x="445" y="149" text-anchor="middle" font-size="9" fill="#2563eb">c</text>
+                
+                <!-- Current arrow i_o -->
+                <path d="M 420 115 L 440 115 L 435 110 M 440 115 L 435 120" stroke="#7c3aed" stroke-width="2" fill="none"/>
+                <text x="425" y="105" text-anchor="middle" font-size="12" fill="#7c3aed" font-style="italic">i</text>
+                <text x="433" y="109" text-anchor="middle" font-size="9" fill="#7c3aed">o</text>
+                
+                <!-- Grid -->
+                <line x1="480" y1="140" x2="550" y2="140" stroke="#1a1a2e" stroke-width="2"/>
+                <rect x="550" y="100" width="80" height="80" fill="#fce7f3" stroke="#dc2626" stroke-width="2" rx="4"/>
+                <text x="590" y="135" text-anchor="middle" font-size="12" fill="#dc2626">Grid</text>
+                <text x="575" y="155" text-anchor="middle" font-size="12" fill="#dc2626" font-style="italic">v</text>
+                <text x="583" y="159" text-anchor="middle" font-size="9" fill="#dc2626">g</text>
+                <text x="595" y="155" text-anchor="middle" font-size="11" fill="#dc2626">∠θ</text>
+                <text x="607" y="159" text-anchor="middle" font-size="9" fill="#dc2626">g</text>
+                
+                <!-- State variables note -->
+                <rect x="50" y="245" width="600" height="25" fill="#f8f9fa" rx="4"/>
+                <text x="350" y="262" text-anchor="middle" font-size="11" fill="#4a4a6a">
+                    状態変数: iL（インダクタ電流）, vo（コンデンサ電圧）, io（出力電流）
+                </text>
+            </svg>
+        </div>
+        
+        <h3>2.2 KVL/KCLによる方程式導出</h3>
+        
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title">フィルタインダクタのKVL</div>
+            </div>
+            <p>インバータ出力からコンデンサ節点までのループにKVLを適用：</p>
+            <div class="eq-box physical">
+                <div class="eq-content">
+                    $$ v_{\text{inv}} = L_f \frac{di_L}{dt} + R_f i_L + v_o $$
+                </div>
+            </div>
+            <p>$\dfrac{di_L}{dt}$ について整理すると：</p>
+            <div class="eq-box state-space">
+                <div class="eq-content">
+                    $$ \frac{di_L}{dt} = \frac{1}{L_f} \left( v_{\text{inv}} - R_f i_L - v_o \right) $$
+                </div>
+            </div>
+        </div>
+        
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title">コンデンサ節点のKCL</div>
+            </div>
+            <p>コンデンサ節点での電流バランス：</p>
+            <div class="eq-box physical">
+                <div class="eq-content">
+                    $$ i_L = C_f \frac{dv_o}{dt} + i_o $$
+                </div>
+            </div>
+            <p>$\dfrac{dv_o}{dt}$ について整理すると：</p>
+            <div class="eq-box state-space">
+                <div class="eq-content">
+                    $$ \frac{dv_o}{dt} = \frac{1}{C_f} \left( i_L - i_o \right) $$
+                </div>
+            </div>
+        </div>
+        
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title">出力インダクタのKVL</div>
+            </div>
+            <p>コンデンサからグリッドまでのループ：</p>
+            <div class="eq-box physical">
+                <div class="eq-content">
+                    $$ v_o = L_c \frac{di_o}{dt} + v_g $$
+                </div>
+            </div>
+            <p>$\dfrac{di_o}{dt}$ について整理すると：</p>
+            <div class="eq-box state-space">
+                <div class="eq-content">
+                    $$ \frac{di_o}{dt} = \frac{1}{L_c} \left( v_o - v_g \right) $$
+                </div>
+            </div>
+        </div>
+        
+        <h3>2.3 dq座標系への変換</h3>
+        
+        <p>三相交流系では、回転座標系（dq座標系）で解析するのが便利です。座標変換により、定常状態で直流量になります。</p>
+        
+        <div class="note">
+            <div class="note-title">🔄 dq変換のポイント</div>
+            <p>abc座標系からdq座標系への変換では、<strong>回転による結合項</strong>（$\omega L i$ や $\omega C v$）が追加されます。これは物理的には座標系の回転によるコリオリ力に相当します。</p>
+        </div>
+        
+        <div class="eq-box important">
+            <div class="eq-title">dq座標系でのLCフィルタ方程式</div>
+            <div class="eq-content">
+                <p><strong>【d軸インダクタ電流】</strong></p>
+                $$ L_f \frac{di_{Ld}}{dt} = v_{\text{inv},d} - R_f i_{Ld} - v_{od} \color{#dc2626}{+ \omega L_f i_{Lq}} $$
+                
+                <p><strong>【q軸インダクタ電流】</strong></p>
+                $$ L_f \frac{di_{Lq}}{dt} = v_{\text{inv},q} - R_f i_{Lq} - v_{oq} \color{#dc2626}{- \omega L_f i_{Ld}} $$
+                
+                <p><strong>【d軸コンデンサ電圧】</strong></p>
+                $$ C_f \frac{dv_{od}}{dt} = i_{Ld} - i_{od} \color{#dc2626}{+ \omega C_f v_{oq}} $$
+                
+                <p><strong>【q軸コンデンサ電圧】</strong></p>
+                $$ C_f \frac{dv_{oq}}{dt} = i_{Lq} - i_{oq} \color{#dc2626}{- \omega C_f v_{od}} $$
+            </div>
+        </div>
+        
+        <p><span style="color:#dc2626; font-weight:bold;">赤字の項</span>がdq変換によって追加された結合項です。</p>
+        
+        <h3>2.4 状態空間表現への整理</h3>
+        
+        <div class="eq-box state-space">
+            <div class="eq-title">LCフィルタの状態空間表現</div>
+            <div class="eq-content">
+                <p>状態ベクトル: $\mathbf{x} = \begin{bmatrix} i_{Ld} & i_{Lq} & v_{od} & v_{oq} \end{bmatrix}^T$</p>
+                
+                $$ \frac{d\mathbf{x}}{dt} = \mathbf{A}_{\text{LC}} \mathbf{x} + \mathbf{B}_{\text{LC}} \mathbf{u} $$
+                
+                $$ \mathbf{A}_{\text{LC}} = \begin{bmatrix} 
+                -\frac{R_f}{L_f} & \omega & -\frac{1}{L_f} & 0 \\
+                -\omega & -\frac{R_f}{L_f} & 0 & -\frac{1}{L_f} \\
+                \frac{1}{C_f} & 0 & 0 & \omega \\
+                0 & \frac{1}{C_f} & -\omega & 0
+                \end{bmatrix} $$
+            </div>
+        </div>
+        
+        <div class="section-divider"></div>
+        
+        <!-- Section 3: Transmission Line -->
+        <h2 id="section3">3. 送電線の物理モデル</h2>
+        
+        <h3>3.1 RL線路モデル</h3>
+        
+        <div class="circuit-container">
+            <svg class="circuit-svg" viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg">
+                <rect width="600" height="180" fill="white"/>
+                <text x="300" y="25" text-anchor="middle" font-weight="bold" font-size="14" fill="#1a1a2e">送電線RLモデル</text>
+                
+                <!-- Bus 1 -->
+                <rect x="50" y="70" width="80" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+                <text x="90" y="95" text-anchor="middle" font-size="12" fill="#2563eb">Bus 1</text>
+                <text x="77" y="112" text-anchor="middle" font-size="11" fill="#2563eb" font-style="italic">v</text>
+                <text x="85" y="116" text-anchor="middle" font-size="8" fill="#2563eb">1</text>
+                <text x="95" y="112" text-anchor="middle" font-size="11" fill="#2563eb">∠θ</text>
+                <text x="107" y="116" text-anchor="middle" font-size="8" fill="#2563eb">1</text>
+                
+                <!-- R -->
+                <line x1="130" y1="95" x2="180" y2="95" stroke="#1a1a2e" stroke-width="2"/>
+                <rect x="180" y="80" width="50" height="30" fill="#d1fae5" stroke="#059669" stroke-width="2" rx="4"/>
+                <text x="205" y="100" text-anchor="middle" font-size="13" fill="#059669" font-style="italic">R</text>
+                
+                <!-- L -->
+                <line x1="230" y1="95" x2="280" y2="95" stroke="#1a1a2e" stroke-width="2"/>
+                <rect x="280" y="80" width="50" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+                <text x="305" y="100" text-anchor="middle" font-size="13" fill="#2563eb" font-style="italic">L</text>
+                <line x1="330" y1="95" x2="380" y2="95" stroke="#1a1a2e" stroke-width="2"/>
+                
+                <!-- Current arrow -->
+                <path d="M 250 70 L 270 70 L 265 65 M 270 70 L 265 75" stroke="#7c3aed" stroke-width="2" fill="none"/>
+                <text x="255" y="60" text-anchor="middle" font-size="12" fill="#7c3aed" font-style="italic">i</text>
+                <text x="268" y="64" text-anchor="middle" font-size="9" fill="#7c3aed">line</text>
+                
+                <!-- Bus 2 -->
+                <rect x="380" y="70" width="80" height="50" fill="#fce7f3" stroke="#dc2626" stroke-width="2" rx="4"/>
+                <text x="420" y="95" text-anchor="middle" font-size="12" fill="#dc2626">Bus 2</text>
+                <text x="407" y="112" text-anchor="middle" font-size="11" fill="#dc2626" font-style="italic">v</text>
+                <text x="415" y="116" text-anchor="middle" font-size="8" fill="#dc2626">2</text>
+                <text x="425" y="112" text-anchor="middle" font-size="11" fill="#dc2626">∠θ</text>
+                <text x="437" y="116" text-anchor="middle" font-size="8" fill="#dc2626">2</text>
+                
+                <!-- Equation -->
+                <text x="300" y="160" text-anchor="middle" font-size="12" fill="#4a4a6a">KVL: v₁ − v₂ = R·i + L·(di/dt)</text>
+            </svg>
+        </div>
+        
+        <div class="eq-box physical">
+            <div class="eq-title">送電線のKVL（単相）</div>
+            <div class="eq-content">
+                $$ v_1 - v_2 = R_{\text{line}} \cdot i_{\text{line}} + L_{\text{line}} \frac{di_{\text{line}}}{dt} $$
+            </div>
+        </div>
+        
+        <p>$\dfrac{di_{\text{line}}}{dt}$ について整理すると：</p>
+        
+        <div class="eq-box state-space">
+            <div class="eq-content">
+                $$ \frac{di_{\text{line}}}{dt} = \frac{1}{L_{\text{line}}} \left( v_1 - v_2 - R_{\text{line}} \cdot i_{\text{line}} \right) $$
+            </div>
+        </div>
+        
+        <h3>3.2 dq座標系での送電線</h3>
+        
+        <div class="eq-box important">
+            <div class="eq-title">dq座標系での送電線方程式</div>
+            <div class="eq-content">
+                $$ L \frac{di_d}{dt} = v_{1d} - v_{2d} - R \cdot i_d \color{#dc2626}{+ \omega L \cdot i_q} $$
+                $$ L \frac{di_q}{dt} = v_{1q} - v_{2q} - R \cdot i_q \color{#dc2626}{- \omega L \cdot i_d} $$
+            </div>
+        </div>
+        
+        <div class="section-divider"></div>
+        
+        <!-- Section 4: PLL -->
+        <h2 id="section4">4. PLLの物理モデル（GFL）</h2>
+        
+        <p>GFLインバータは、系統電圧の位相を追従するためにPLL（Phase-Locked Loop）を使用します。</p>
+        
+        <h3>4.1 PLLのブロック図</h3>
+        
+        <div class="circuit-container">
+            <svg class="circuit-svg" viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
+                <rect width="700" height="220" fill="white"/>
+                <text x="350" y="25" text-anchor="middle" font-weight="bold" font-size="14" fill="#1a1a2e">PLL（Phase-Locked Loop）のブロック図</text>
+                
+                <!-- Input v_q -->
+                <text x="25" y="100" font-size="12" fill="#2563eb" font-style="italic">v</text>
+                <text x="33" y="104" font-size="9" fill="#2563eb">q</text>
+                <text x="25" y="118" font-size="10" fill="#4a4a6a">(q軸電圧)</text>
+                <line x1="55" y1="100" x2="120" y2="100" stroke="#1a1a2e" stroke-width="2"/>
+                <path d="M 110 100 L 120 100 L 115 95 M 120 100 L 115 105" stroke="#1a1a2e" stroke-width="2" fill="none"/>
+                
+                <!-- PI Controller -->
+                <rect x="120" y="75" width="100" height="50" fill="#d1fae5" stroke="#059669" stroke-width="2" rx="4"/>
+                <text x="170" y="97" text-anchor="middle" font-size="12" fill="#059669" font-weight="bold">PI制御器</text>
+                <text x="170" y="115" text-anchor="middle" font-size="11" fill="#059669">K</text>
+                <text x="178" y="118" text-anchor="middle" font-size="8" fill="#059669">p</text>
+                <text x="187" y="115" text-anchor="middle" font-size="11" fill="#059669">+ K</text>
+                <text x="202" y="118" text-anchor="middle" font-size="8" fill="#059669">i</text>
+                <text x="210" y="115" text-anchor="middle" font-size="11" fill="#059669">/s</text>
+                
+                <line x1="220" y1="100" x2="280" y2="100" stroke="#1a1a2e" stroke-width="2"/>
+                <path d="M 270 100 L 280 100 L 275 95 M 280 100 L 275 105" stroke="#1a1a2e" stroke-width="2" fill="none"/>
+                
+                <!-- Sum -->
+                <circle cx="310" cy="100" r="15" fill="white" stroke="#1a1a2e" stroke-width="2"/>
+                <text x="310" y="105" text-anchor="middle" font-size="14">+</text>
+                <line x1="310" y1="55" x2="310" y2="85" stroke="#1a1a2e" stroke-width="2"/>
+                <text x="303" y="50" text-anchor="middle" font-size="12" fill="#d97706" font-style="italic">ω</text>
+                <text x="317" y="54" text-anchor="middle" font-size="9" fill="#d97706">0</text>
+                
+                <line x1="325" y1="100" x2="380" y2="100" stroke="#1a1a2e" stroke-width="2"/>
+                
+                <!-- omega output -->
+                <rect x="380" y="80" width="60" height="40" fill="#fef3c7" stroke="#d97706" stroke-width="2" rx="4"/>
+                <text x="410" y="105" text-anchor="middle" font-size="14" fill="#d97706" font-style="italic">ω</text>
+                
+                <line x1="440" y1="100" x2="500" y2="100" stroke="#1a1a2e" stroke-width="2"/>
+                
+                <!-- Integrator -->
+                <rect x="500" y="75" width="80" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+                <text x="540" y="97" text-anchor="middle" font-size="14" fill="#2563eb">∫ dt</text>
+                <text x="540" y="115" text-anchor="middle" font-size="10" fill="#2563eb">積分器</text>
+                
+                <!-- theta output -->
+                <line x1="580" y1="100" x2="640" y2="100" stroke="#1a1a2e" stroke-width="2"/>
+                <text x="660" y="100" font-size="14" fill="#7c3aed" font-weight="bold" font-style="italic">θ</text>
+                <text x="660" y="118" font-size="10" fill="#4a4a6a">(出力位相)</text>
+                
+                <!-- State variables -->
+                <rect x="100" y="165" width="500" height="35" fill="#f8f9fa" rx="4"/>
+                <text x="350" y="187" text-anchor="middle" font-size="11" fill="#4a4a6a">
+                    状態変数: ε（PI積分器）, ω（角速度）, θ（位相角）
+                </text>
+            </svg>
+        </div>
+        
+        <h3>4.2 PLLの微分方程式</h3>
+        
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title">PI制御器の積分器状態</div>
+            </div>
+            <div class="eq-box state-space">
+                <div class="eq-content">
+                    $$ \frac{d\varepsilon}{dt} = v_q \quad \text{（q軸電圧を積分）} $$
+                </div>
+            </div>
+        </div>
+        
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title">PI出力 → 角速度（LPF付き）</div>
+            </div>
+            <div class="eq-box state-space">
+                <div class="eq-content">
+                    $$ \tau_{\text{pll}} \frac{d\omega}{dt} = -\omega + \omega_0 + K_p v_q + K_i \varepsilon $$
+                </div>
+            </div>
+        </div>
+        
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title">位相角の時間積分</div>
+            </div>
+            <div class="eq-box state-space">
+                <div class="eq-content">
+                    $$ \frac{d\theta}{dt} = \omega $$
+                </div>
+            </div>
+        </div>
+        
+        <div class="note">
+            <div class="note-title">📌 PLLの物理的意味</div>
+            <p>PLLは「$v_q = 0$」となるように位相 $\theta$ を調整する負帰還ループです。$v_q = 0$ のとき、推定した位相 $\theta$ が系統電圧の真の位相と一致します。</p>
+        </div>
+        
+        <div class="section-divider"></div>
+        
+        <!-- Section 5: Droop/VSG -->
+        <h2 id="section5">5. ドループ/VSG制御（GFM）</h2>
+        
+        <p>GFMインバータは、PLLの代わりに自ら周波数・電圧を生成する制御を行います。</p>
+        
+        <h3>5.1 ドループ制御</h3>
+        
+        <div class="circuit-container">
+            <svg class="circuit-svg" viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg">
+                <rect width="500" height="200" fill="white"/>
+                <text x="250" y="25" text-anchor="middle" font-weight="bold" font-size="14" fill="#1a1a2e">P-ω ドループ特性</text>
+                
+                <!-- Axes -->
+                <line x1="80" y1="160" x2="420" y2="160" stroke="#1a1a2e" stroke-width="2"/>
+                <line x1="80" y1="160" x2="80" y2="50" stroke="#1a1a2e" stroke-width="2"/>
+                <path d="M 420 160 L 410 155 M 420 160 L 410 165" stroke="#1a1a2e" stroke-width="2" fill="none"/>
+                <path d="M 80 50 L 75 60 M 80 50 L 85 60" stroke="#1a1a2e" stroke-width="2" fill="none"/>
+                
+                <!-- Labels -->
+                <text x="420" y="180" text-anchor="middle" font-size="12" fill="#1a1a2e" font-style="italic">P</text>
+                <text x="55" y="100" text-anchor="middle" font-size="12" fill="#1a1a2e" font-style="italic">ω</text>
+                
+                <!-- Droop line -->
+                <line x1="100" y1="70" x2="380" y2="140" stroke="#059669" stroke-width="3"/>
+                
+                <!-- Operating point -->
+                <circle cx="240" cy="105" r="6" fill="#dc2626"/>
+                <text x="260" y="100" font-size="11" fill="#dc2626">動作点</text>
+                
+                <!-- Reference lines -->
+                <line x1="80" y1="105" x2="240" y2="105" stroke="#4a4a6a" stroke-width="1" stroke-dasharray="4"/>
+                <line x1="240" y1="105" x2="240" y2="160" stroke="#4a4a6a" stroke-width="1" stroke-dasharray="4"/>
+                <text x="60" y="108" font-size="11" fill="#d97706" font-style="italic">ω</text>
+                <text x="70" y="112" font-size="8" fill="#d97706">0</text>
+                <text x="235" y="175" font-size="11" fill="#2563eb" font-style="italic">P</text>
+                <text x="245" y="179" font-size="8" fill="#2563eb">0</text>
+                
+                <!-- Slope -->
+                <text x="340" y="100" font-size="12" fill="#059669">傾き: −m</text>
+                <text x="372" y="104" font-size="9" fill="#059669">p</text>
+            </svg>
+        </div>
+        
+        <div class="eq-box important">
+            <div class="eq-title">ドループ制御方程式</div>
+            <div class="eq-content">
+                <p><strong>【P-ω ドループ（周波数制御）】</strong></p>
+                $$ \omega = \omega_0 - m_p (P - P_0) $$
+                
+                <p><strong>【Q-V ドループ（電圧制御）】</strong></p>
+                $$ V = V_0 - m_q (Q - Q_0) $$
+                
+                <p><strong>【位相角】</strong></p>
+                $$ \frac{d\theta}{dt} = \omega $$
+            </div>
+        </div>
+        
+        <h3>5.2 VSG（Virtual Synchronous Generator）制御</h3>
+        
+        <p>VSG制御は、同期発電機のスイング方程式を模擬することで仮想的な慣性を実現します。</p>
+        
+        <div class="eq-box important">
+            <div class="eq-title">VSGのスイング方程式（仮想同期機）</div>
+            <div class="eq-content">
+                $$ J \frac{d\omega}{dt} = P_{\text{ref}} - P_e - D(\omega - \omega_0) $$
+                $$ \frac{d\theta}{dt} = \omega $$
+                
+                <table class="nom-table" style="margin-top: 1rem;">
+                    <tr><td>$J$</td><td>仮想慣性定数 [kg·m² または s]</td></tr>
+                    <tr><td>$D$</td><td>仮想ダンピング係数</td></tr>
+                    <tr><td>$P_{\text{ref}}$</td><td>有効電力指令値</td></tr>
+                    <tr><td>$P_e$</td><td>実際の出力電力</td></tr>
+                </table>
+            </div>
+        </div>
+        
+        <div class="note">
+            <div class="note-title">🔄 ドループ vs VSG の比較</div>
+            <table class="comparison-table">
+                <tr>
+                    <th>項目</th>
+                    <th>ドループ制御</th>
+                    <th>VSG制御</th>
+                </tr>
+                <tr>
+                    <td>周波数応答</td>
+                    <td>瞬時（代数的）</td>
+                    <td>慣性による遅れあり</td>
+                </tr>
+                <tr>
+                    <td>慣性</td>
+                    <td>なし</td>
+                    <td>仮想慣性 $J$</td>
+                </tr>
+                <tr>
+                    <td>状態変数</td>
+                    <td>$\theta$ のみ</td>
+                    <td>$\omega$, $\theta$</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="section-divider"></div>
+        
+        <!-- Section 6: Synchronous Generator -->
+        <h2 id="section6">6. 同期発電機の物理モデル（SG）</h2>
+        
+        <h3>6.1 機械系のモデル</h3>
+        
+        <div class="circuit-container">
+            <svg class="circuit-svg" viewBox="0 0 550 200" xmlns="http://www.w3.org/2000/svg">
+                <rect width="550" height="200" fill="white"/>
+                <text x="275" y="25" text-anchor="middle" font-weight="bold" font-size="14" fill="#1a1a2e">同期発電機の機械系モデル</text>
+                
+                <!-- Turbine -->
+                <rect x="30" y="80" width="80" height="60" fill="#d1fae5" stroke="#059669" stroke-width="2" rx="4"/>
+                <text x="70" y="105" text-anchor="middle" font-size="11" fill="#059669" font-weight="bold">タービン</text>
+                <text x="62" y="125" text-anchor="middle" font-size="11" fill="#059669" font-style="italic">T</text>
+                <text x="74" y="129" text-anchor="middle" font-size="8" fill="#059669">m</text>
+                
+                <!-- Shaft -->
+                <line x1="110" y1="110" x2="170" y2="110" stroke="#1a1a2e" stroke-width="4"/>
+                
+                <!-- Rotor -->
+                <circle cx="220" cy="110" r="45" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+                <text x="220" y="100" text-anchor="middle" font-size="11" fill="#2563eb" font-weight="bold">回転子</text>
+                <text x="205" y="120" text-anchor="middle" font-size="11" fill="#2563eb" font-style="italic">J</text>
+                <text x="215" y="120" text-anchor="middle" font-size="11" fill="#2563eb">,</text>
+                <text x="225" y="120" text-anchor="middle" font-size="11" fill="#2563eb" font-style="italic">ω</text>
+                <text x="235" y="120" text-anchor="middle" font-size="11" fill="#2563eb">,</text>
+                <text x="245" y="120" text-anchor="middle" font-size="11" fill="#2563eb" font-style="italic">θ</text>
+                
+                <!-- Stator -->
+                <circle cx="220" cy="110" r="58" fill="none" stroke="#7c3aed" stroke-width="2" stroke-dasharray="4"/>
+                <text x="220" y="180" text-anchor="middle" font-size="10" fill="#7c3aed">固定子</text>
+                
+                <!-- Electrical load -->
+                <line x1="265" y1="110" x2="320" y2="110" stroke="#1a1a2e" stroke-width="2"/>
+                <rect x="320" y="85" width="80" height="50" fill="#fce7f3" stroke="#dc2626" stroke-width="2" rx="4"/>
+                <text x="360" y="105" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="bold">電気負荷</text>
+                <text x="350" y="125" text-anchor="middle" font-size="11" fill="#dc2626" font-style="italic">T</text>
+                <text x="360" y="129" text-anchor="middle" font-size="8" fill="#dc2626">e</text>
+                <text x="370" y="125" text-anchor="middle" font-size="11" fill="#dc2626">,</text>
+                <text x="382" y="125" text-anchor="middle" font-size="11" fill="#dc2626" font-style="italic">P</text>
+                <text x="392" y="129" text-anchor="middle" font-size="8" fill="#dc2626">e</text>
+                
+                <!-- Damping -->
+                <rect x="430" y="85" width="70" height="50" fill="#fef3c7" stroke="#d97706" stroke-width="2" rx="4"/>
+                <text x="465" y="105" text-anchor="middle" font-size="11" fill="#d97706" font-weight="bold">制動</text>
+                <text x="465" y="125" text-anchor="middle" font-size="12" fill="#d97706" font-style="italic">D</text>
+            </svg>
+        </div>
+        
+        <p>回転子の運動方程式（ニュートンの第2法則の回転版）：</p>
+        
+        <div class="eq-box physical">
+            <div class="eq-title">スイング方程式（Swing Equation）</div>
+            <div class="eq-content">
+                $$ J \frac{d\omega}{dt} = T_m - T_e - D(\omega - \omega_0) $$
+                $$ \frac{d\theta}{dt} = \omega - \omega_0 \quad \text{（相対位相角）} $$
+                
+                <table class="nom-table" style="margin-top: 1rem;">
+                    <tr><td>$J$</td><td>慣性モーメント [kg·m²]</td></tr>
+                    <tr><td>$T_m$</td><td>機械トルク（タービンから）[N·m]</td></tr>
+                    <tr><td>$T_e$</td><td>電気トルク（発電負荷）[N·m]</td></tr>
+                    <tr><td>$D$</td><td>制動係数 [N·m·s/rad]</td></tr>
+                    <tr><td>$\omega_0$</td><td>同期角速度 $(2\pi f_0)$ [rad/s]</td></tr>
+                </table>
+            </div>
+        </div>
+        
+        <h3>6.2 電気系のモデル（簡略モデル）</h3>
+        
+        <div class="circuit-container">
+            <svg class="circuit-svg" viewBox="0 0 500 180" xmlns="http://www.w3.org/2000/svg">
+                <rect width="500" height="180" fill="white"/>
+                <text x="250" y="25" text-anchor="middle" font-weight="bold" font-size="14" fill="#1a1a2e">同期発電機の等価回路（簡略モデル）</text>
+                
+                <!-- EMF -->
+                <circle cx="80" cy="100" r="25" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+                <text x="75" y="105" text-anchor="middle" font-size="13" fill="#059669" font-style="italic">E'</text>
+                
+                <line x1="105" y1="100" x2="150" y2="100" stroke="#1a1a2e" stroke-width="2"/>
+                
+                <!-- X'd -->
+                <rect x="150" y="85" width="60" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+                <text x="172" y="105" text-anchor="middle" font-size="12" fill="#2563eb" font-style="italic">X'</text>
+                <text x="188" y="109" text-anchor="middle" font-size="9" fill="#2563eb">d</text>
+                
+                <!-- Ra -->
+                <line x1="210" y1="100" x2="250" y2="100" stroke="#1a1a2e" stroke-width="2"/>
+                <rect x="250" y="85" width="50" height="30" fill="#fef3c7" stroke="#d97706" stroke-width="2" rx="4"/>
+                <text x="270" y="105" text-anchor="middle" font-size="12" fill="#d97706" font-style="italic">R</text>
+                <text x="283" y="109" text-anchor="middle" font-size="9" fill="#d97706">a</text>
+                
+                <line x1="300" y1="100" x2="350" y2="100" stroke="#1a1a2e" stroke-width="2"/>
+                
+                <!-- Current arrow -->
+                <path d="M 320 85 L 340 85 L 335 80 M 340 85 L 335 90" stroke="#7c3aed" stroke-width="2" fill="none"/>
+                <text x="330" y="75" text-anchor="middle" font-size="13" fill="#7c3aed" font-style="italic">I</text>
+                
+                <!-- Terminal -->
+                <circle cx="350" cy="100" r="5" fill="#1a1a2e"/>
+                <text x="370" y="95" font-size="12" fill="#dc2626" font-style="italic">V</text>
+                <text x="382" y="99" font-size="9" fill="#dc2626">t</text>
+                <text x="393" y="95" font-size="12" fill="#dc2626">∠δ</text>
+                
+                <!-- Equation -->
+                <text x="250" y="160" text-anchor="middle" font-size="12" fill="#4a4a6a" font-style="italic">E'∠θ = V</text>
+                <text x="296" y="164" text-anchor="middle" font-size="9" fill="#4a4a6a">t</text>
+                <text x="310" y="160" text-anchor="middle" font-size="12" fill="#4a4a6a">∠δ + (R</text>
+                <text x="346" y="164" text-anchor="middle" font-size="9" fill="#4a4a6a">a</text>
+                <text x="365" y="160" text-anchor="middle" font-size="12" fill="#4a4a6a">+ jX'</text>
+                <text x="395" y="164" text-anchor="middle" font-size="9" fill="#4a4a6a">d</text>
+                <text x="407" y="160" text-anchor="middle" font-size="12" fill="#4a4a6a">)·I</text>
+            </svg>
+        </div>
+        
+        <div class="eq-box physical">
+            <div class="eq-title">電気系方程式（dq座標系）</div>
+            <div class="eq-content">
+                <p><strong>【d軸電圧方程式】</strong></p>
+                $$ v_d = -R_s i_d + X_q i_q $$
+                
+                <p><strong>【q軸電圧方程式】</strong></p>
+                $$ v_q = E'_q - R_s i_q - X'_d i_d $$
+                
+                <p><strong>【界磁巻線の動特性】</strong></p>
+                $$ T'_{d0} \frac{dE'_q}{dt} = v_{ex} - E'_q - (X_d - X'_d) i_d $$
+                
+                <table class="nom-table" style="margin-top: 1rem;">
+                    <tr><td>$E'_q$</td><td>過渡内部起電力（q軸）</td></tr>
+                    <tr><td>$X_d, X_q$</td><td>同期リアクタンス</td></tr>
+                    <tr><td>$X'_d$</td><td>過渡リアクタンス</td></tr>
+                    <tr><td>$T'_{d0}$</td><td>開回路過渡時定数</td></tr>
+                    <tr><td>$v_{ex}$</td><td>励磁電圧（入力）</td></tr>
+                </table>
+            </div>
+        </div>
+        
+        <h3>6.3 電気トルクの式</h3>
+        
+        <div class="eq-box physical">
+            <div class="eq-content">
+                $$ T_e = \psi_d i_q - \psi_q i_d $$
+                
+                <p>簡略化すると（円筒機の場合）：</p>
+                $$ T_e \approx E'_q i_q + (X_d - X_q) i_d i_q $$
+            </div>
+        </div>
+        
+        <div class="section-divider"></div>
+        
+        <!-- Section 7: Integration -->
+        <h2 id="section7">7. 状態空間表現への統合</h2>
+        
+        <h3>7.1 状態変数の選定まとめ</h3>
+        
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>物理コンポーネント</th>
+                    <th>エネルギー蓄積</th>
+                    <th>状態変数</th>
+                    <th>支配方程式</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>インダクタ $L$</td>
+                    <td>磁気エネルギー $\frac{1}{2}Li^2$</td>
+                    <td>電流 $i$</td>
+                    <td>$L \dfrac{di}{dt} = v$</td>
+                </tr>
+                <tr>
+                    <td>コンデンサ $C$</td>
+                    <td>静電エネルギー $\frac{1}{2}Cv^2$</td>
+                    <td>電圧 $v$</td>
+                    <td>$C \dfrac{dv}{dt} = i$</td>
+                </tr>
+                <tr>
+                    <td>回転体（ロータ）</td>
+                    <td>運動エネルギー $\frac{1}{2}J\omega^2$</td>
+                    <td>角速度 $\omega$</td>
+                    <td>$J \dfrac{d\omega}{dt} = \tau$</td>
+                </tr>
+                <tr>
+                    <td>積分器（制御系）</td>
+                    <td>積分状態</td>
+                    <td>積分値 $\xi$</td>
+                    <td>$\dfrac{d\xi}{dt} = \text{入力}$</td>
+                </tr>
+                <tr>
+                    <td>位相角</td>
+                    <td>幾何学的状態</td>
+                    <td>角度 $\theta$</td>
+                    <td>$\dfrac{d\theta}{dt} = \omega$</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3>7.2 統合状態空間モデル</h3>
+        
+        <div class="eq-box state-space">
+            <div class="eq-title">ディスクリプタ状態空間表現</div>
+            <div class="eq-content">
+                $$ \mathbf{E} \dot{\mathbf{x}} = \mathbf{A} \mathbf{x} + \mathbf{B} \mathbf{u} $$
+                $$ \mathbf{y} = \mathbf{C} \mathbf{x} + \mathbf{D} \mathbf{u} $$
+                
+                <p>状態ベクトルの構成：</p>
+                $$ \mathbf{x} = \begin{bmatrix} \mathbf{x}_{\text{App1}} \\ \mathbf{x}_{\text{App2}} \\ \mathbf{x}_{\text{Network}} \end{bmatrix} = \begin{bmatrix} \text{Infinite Bus} \\ \text{インバータ/SG} \\ \text{送電線} \end{bmatrix} $$
+            </div>
+        </div>
+        
+        <h3>7.3 各モデルの状態構成比較</h3>
+        
+        <div class="eq-box">
+            <div class="eq-title">GFL（28状態）の内訳</div>
+            <div class="eq-content">
+                <p><strong>Apparatus 1 (2):</strong> $\xi_1, \xi_2$ （代数変数）</p>
+                <p><strong>Apparatus 2 (14):</strong></p>
+                <ul style="margin-left: 2rem;">
+                    <li>PLL (3): $\varepsilon, \omega, \theta$</li>
+                    <li>LCフィルタ (4): $i_{Ld}, i_{Lq}, v_{od}, v_{oq}$</li>
+                    <li>電流制御 (2): $i_{Ld,i}, i_{Lq,i}$</li>
+                    <li>電圧制御 (2): $v_{od,i}, v_{oq,i}$</li>
+                    <li>出力 (3): $i_{od}, i_{oq}, v_{d,\text{ref}}$</li>
+                </ul>
+                <p><strong>Network (12):</strong> 送電線電流 (8) + 代数変数 (4)</p>
+            </div>
+        </div>
+        
+        <div class="eq-box">
+            <div class="eq-title">SG（19状態）の内訳</div>
+            <div class="eq-content">
+                <p><strong>Apparatus 1 (2):</strong> $\xi_1, \xi_2$ （代数変数）</p>
+                <p><strong>Apparatus 2 (5):</strong></p>
+                <ul style="margin-left: 2rem;">
+                    <li>界磁/励磁 (1): $\varepsilon$ （または $E'_q$）</li>
+                    <li>固定子電流 (2): $i_d, i_q$</li>
+                    <li>機械系 (2): $\omega, \theta$</li>
+                </ul>
+                <p><strong>Network (12):</strong> 送電線電流 (8) + 代数変数 (4)</p>
+            </div>
+        </div>
+        
+        <h3>7.4 A行列のブロック構造</h3>
+        
+        <div class="circuit-container">
+            <svg viewBox="0 0 500 320" xmlns="http://www.w3.org/2000/svg">
+                <rect width="500" height="320" fill="white"/>
+                <text x="250" y="25" text-anchor="middle" font-weight="bold" font-size="14" fill="#1a1a2e">A行列のブロック構造</text>
+                
+                <!-- Matrix outline -->
+                <rect x="80" y="50" width="240" height="240" fill="none" stroke="#1a1a2e" stroke-width="2"/>
+                
+                <!-- Block 1 -->
+                <rect x="80" y="50" width="40" height="40" fill="rgba(99, 102, 241, 0.3)" stroke="#6366f1" stroke-width="1"/>
+                
+                <!-- Block 2 -->
+                <rect x="120" y="90" width="120" height="120" fill="rgba(236, 72, 153, 0.3)" stroke="#ec4899" stroke-width="1"/>
+                
+                <!-- Block 3 -->
+                <rect x="240" y="210" width="80" height="80" fill="rgba(6, 182, 212, 0.3)" stroke="#06b6d4" stroke-width="1"/>
+                
+                <!-- Coupling blocks -->
+                <rect x="120" y="50" width="120" height="40" fill="rgba(200, 200, 200, 0.2)" stroke="#999" stroke-width="1" stroke-dasharray="3"/>
+                <rect x="240" y="50" width="80" height="40" fill="rgba(200, 200, 200, 0.2)" stroke="#999" stroke-width="1" stroke-dasharray="3"/>
+                <rect x="80" y="90" width="40" height="120" fill="rgba(200, 200, 200, 0.2)" stroke="#999" stroke-width="1" stroke-dasharray="3"/>
+                <rect x="240" y="90" width="80" height="120" fill="rgba(200, 200, 200, 0.2)" stroke="#999" stroke-width="1" stroke-dasharray="3"/>
+                <rect x="80" y="210" width="40" height="80" fill="rgba(200, 200, 200, 0.2)" stroke="#999" stroke-width="1" stroke-dasharray="3"/>
+                <rect x="120" y="210" width="120" height="80" fill="rgba(200, 200, 200, 0.2)" stroke="#999" stroke-width="1" stroke-dasharray="3"/>
+                
+                <!-- Labels -->
+                <text x="55" y="75" text-anchor="end" font-size="10" fill="#6366f1">App1</text>
+                <text x="55" y="155" text-anchor="end" font-size="10" fill="#ec4899">App2</text>
+                <text x="55" y="255" text-anchor="end" font-size="10" fill="#06b6d4">Net</text>
+                
+                <text x="100" y="45" text-anchor="middle" font-size="10" fill="#6366f1">App1</text>
+                <text x="180" y="45" text-anchor="middle" font-size="10" fill="#ec4899">App2</text>
+                <text x="280" y="45" text-anchor="middle" font-size="10" fill="#06b6d4">Net</text>
+                
+                <!-- Legend -->
+                <g transform="translate(350, 70)">
+                    <text x="0" y="0" font-weight="bold" font-size="11" fill="#1a1a2e">凡例</text>
+                    <rect x="0" y="10" width="20" height="15" fill="rgba(99, 102, 241, 0.3)" stroke="#6366f1"/>
+                    <text x="30" y="22" font-size="10">Infinite Bus</text>
+                    <rect x="0" y="35" width="20" height="15" fill="rgba(236, 72, 153, 0.3)" stroke="#ec4899"/>
+                    <text x="30" y="47" font-size="10">GFL/GFM/SG</text>
+                    <rect x="0" y="60" width="20" height="15" fill="rgba(6, 182, 212, 0.3)" stroke="#06b6d4"/>
+                    <text x="30" y="72" font-size="10">Network</text>
+                    <rect x="0" y="85" width="20" height="15" fill="rgba(200, 200, 200, 0.2)" stroke="#999" stroke-dasharray="3"/>
+                    <text x="30" y="97" font-size="10">結合項</text>
+                </g>
+            </svg>
+        </div>
+        
+        <h3>7.5 物理モデルから状態空間への変換手順</h3>
+        
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title">物理法則の適用</div>
+            </div>
+            <p>KVL、KCL、ニュートンの法則を各コンポーネントに適用</p>
+        </div>
+        
+        <div class="derivation-arrow">↓</div>
+        
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title">微分方程式の導出</div>
+            </div>
+            <p>$L \dfrac{di}{dt} = \ldots$, $C \dfrac{dv}{dt} = \ldots$, $J \dfrac{d\omega}{dt} = \ldots$ の形式</p>
+        </div>
+        
+        <div class="derivation-arrow">↓</div>
+        
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title">dq座標変換</div>
+            </div>
+            <p>三相交流 → 回転座標系（結合項 $\omega Li$, $\omega Cv$ が追加）</p>
+        </div>
+        
+        <div class="derivation-arrow">↓</div>
+        
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-number">4</div>
+                <div class="step-title">状態変数の定義</div>
+            </div>
+            <p>エネルギー蓄積素子の変数を状態として選択</p>
+        </div>
+        
+        <div class="derivation-arrow">↓</div>
+        
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-number">5</div>
+                <div class="step-title">行列形式への整理</div>
+            </div>
+            <p>$\dot{\mathbf{x}} = \mathbf{A}\mathbf{x} + \mathbf{B}\mathbf{u}$, $\mathbf{y} = \mathbf{C}\mathbf{x} + \mathbf{D}\mathbf{u}$ の標準形へ</p>
+        </div>
+        
+        <div class="note">
+            <div class="note-title">💡 物理的直感と数学的形式の対応</div>
+            <table class="comparison-table">
+                <tr>
+                    <th>物理的意味</th>
+                    <th>行列要素</th>
+                </tr>
+                <tr>
+                    <td>自己減衰（$R/L$, $D/J$）</td>
+                    <td>$\mathbf{A}$行列の対角要素（負）</td>
+                </tr>
+                <tr>
+                    <td>dq結合（$\omega L$, $\omega C$）</td>
+                    <td>$\mathbf{A}$行列の反対角要素（dq間）</td>
+                </tr>
+                <tr>
+                    <td>サブシステム間接続</td>
+                    <td>$\mathbf{A}$行列の非対角ブロック</td>
+                </tr>
+                <tr>
+                    <td>外部入力の影響</td>
+                    <td>$\mathbf{B}$行列の要素</td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- Appendix -->
+        <div class="appendix">
+            <h2 id="appendix">Appendix: 完全な記号一覧</h2>
+            
+            <h3>A.1 ギリシャ文字</h3>
+            <table class="comparison-table">
+                <tr><th>記号</th><th>名称</th><th>説明</th><th>単位</th></tr>
+                <tr><td>$\omega$</td><td>オメガ</td><td>角速度</td><td>rad/s</td></tr>
+                <tr><td>$\omega_0$</td><td>オメガゼロ</td><td>同期角速度（$2\pi f_0$）</td><td>rad/s</td></tr>
+                <tr><td>$\theta$</td><td>シータ</td><td>位相角</td><td>rad</td></tr>
+                <tr><td>$\varepsilon$</td><td>イプシロン</td><td>積分器状態 / 界磁状態</td><td>−</td></tr>
+                <tr><td>$\xi$</td><td>クサイ</td><td>代数変数（一般）</td><td>−</td></tr>
+                <tr><td>$\psi$</td><td>プサイ</td><td>磁束鎖交数</td><td>Wb</td></tr>
+                <tr><td>$\tau$</td><td>タウ</td><td>トルク / 時定数</td><td>N·m / s</td></tr>
+                <tr><td>$\delta$</td><td>デルタ</td><td>内部位相角</td><td>rad</td></tr>
+            </table>
+            
+            <h3>A.2 添字の意味</h3>
+            <table class="comparison-table">
+                <tr><th>添字</th><th>意味</th><th>例</th></tr>
+                <tr><td>$d$, $q$</td><td>dq回転座標系の軸</td><td>$i_d$, $v_q$</td></tr>
+                <tr><td>$L$</td><td>インダクタ関連</td><td>$i_L$（インダクタ電流）</td></tr>
+                <tr><td>$o$</td><td>出力（output）</td><td>$v_o$（出力電圧）</td></tr>
+                <tr><td>$f$</td><td>フィルタ（filter）</td><td>$L_f$, $C_f$</td></tr>
+                <tr><td>$c$</td><td>結合（coupling）</td><td>$L_c$</td></tr>
+                <tr><td>$m$</td><td>機械的（mechanical）</td><td>$T_m$（機械トルク）</td></tr>
+                <tr><td>$e$</td><td>電気的（electrical）</td><td>$T_e$, $P_e$</td></tr>
+                <tr><td>$i$</td><td>積分器（integrator）</td><td>$i_{Ld,i}$</td></tr>
+                <tr><td>$\text{inv}$</td><td>インバータ</td><td>$v_{\text{inv}}$</td></tr>
+                <tr><td>$g$</td><td>グリッド（系統）</td><td>$v_g$</td></tr>
+                <tr><td>$\text{ref}$</td><td>指令値</td><td>$P_{\text{ref}}$</td></tr>
+                <tr><td>$0$</td><td>基準値 / 定格値</td><td>$\omega_0$, $P_0$</td></tr>
+                <tr><td>$'$</td><td>過渡（transient）</td><td>$X'_d$, $E'_q$</td></tr>
+            </table>
+            
+            <h3>A.3 主要パラメータ</h3>
+            <table class="comparison-table">
+                <tr><th>記号</th><th>説明</th><th>単位</th></tr>
+                <tr><td>$L_f$</td><td>フィルタインダクタンス</td><td>H</td></tr>
+                <tr><td>$R_f$</td><td>フィルタ抵抗</td><td>Ω</td></tr>
+                <tr><td>$C_f$</td><td>フィルタ容量</td><td>F</td></tr>
+                <tr><td>$L_c$</td><td>結合インダクタンス</td><td>H</td></tr>
+                <tr><td>$J$</td><td>慣性モーメント</td><td>kg·m²</td></tr>
+                <tr><td>$D$</td><td>制動（ダンピング）係数</td><td>N·m·s/rad</td></tr>
+                <tr><td>$K_p$</td><td>比例ゲイン</td><td>−</td></tr>
+                <tr><td>$K_i$</td><td>積分ゲイン</td><td>1/s</td></tr>
+                <tr><td>$m_p$</td><td>P-ωドループ係数</td><td>rad/s/W</td></tr>
+                <tr><td>$m_q$</td><td>Q-Vドループ係数</td><td>V/var</td></tr>
+                <tr><td>$X_d$, $X_q$</td><td>同期リアクタンス</td><td>Ω</td></tr>
+                <tr><td>$X'_d$</td><td>過渡リアクタンス</td><td>Ω</td></tr>
+                <tr><td>$T'_{d0}$</td><td>開回路過渡時定数</td><td>s</td></tr>
+            </table>
+        </div>
+        
+    </div>
+</body>
+</html>

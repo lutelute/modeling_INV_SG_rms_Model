@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GFL / GFM / SG モデル比較</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a24;
+            --text-primary: #e8e8ec;
+            --text-secondary: #9898a8;
+            --accent-gfl: #3b82f6;
+            --accent-gfm: #10b981;
+            --accent-sg: #f59e0b;
+            --apparatus1: #6366f1;
+            --apparatus2: #ec4899;
+            --network: #06b6d4;
+            --border: #2a2a3a;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent-gfl), var(--accent-gfm), var(--accent-sg));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
+        
+        /* Model Cards */
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .model-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+        
+        .model-card.gfl { border-top: 4px solid var(--accent-gfl); }
+        .model-card.gfm { border-top: 4px solid var(--accent-gfm); }
+        .model-card.sg { border-top: 4px solid var(--accent-sg); }
+        
+        .model-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .model-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .gfl .model-badge { background: var(--accent-gfl); color: white; }
+        .gfm .model-badge { background: var(--accent-gfm); color: white; }
+        .sg .model-badge { background: var(--accent-sg); color: black; }
+        
+        .model-name {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+        
+        .dim-box {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        .dim-item {
+            background: var(--bg-secondary);
+            padding: 0.75rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .dim-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'Source Code Pro', monospace;
+        }
+        
+        .dim-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Section Styles */
+        .section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+        
+        .section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .section h3 {
+            font-size: 1.2rem;
+            margin: 1.5rem 0 1rem;
+            color: var(--text-primary);
+        }
+        
+        /* Equation Box */
+        .equation-box {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            font-family: 'Source Code Pro', monospace;
+            overflow-x: auto;
+        }
+        
+        .equation-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .equation {
+            font-size: 1.1rem;
+            line-height: 2;
+        }
+        
+        /* State Variable Colors */
+        .var-apparatus1 {
+            color: var(--apparatus1);
+            font-weight: 600;
+        }
+        
+        .var-apparatus2 {
+            color: var(--apparatus2);
+            font-weight: 600;
+        }
+        
+        .var-network {
+            color: var(--network);
+            font-weight: 600;
+        }
+        
+        .var-input {
+            color: #a78bfa;
+            font-weight: 600;
+        }
+        
+        .var-output {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+        
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        
+        /* Block Diagram */
+        .diagram-container {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+        
+        .diagram-svg {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            display: block;
+        }
+        
+        /* State Table */
+        .state-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        
+        .state-table th,
+        .state-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .state-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+        }
+        
+        .state-table tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .state-index {
+            font-family: 'Source Code Pro', monospace;
+            font-weight: 600;
+        }
+        
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        
+        .comparison-table th {
+            background: var(--bg-secondary);
+        }
+        
+        .comparison-table th:nth-child(2) { color: var(--accent-gfl); }
+        .comparison-table th:nth-child(3) { color: var(--accent-gfm); }
+        .comparison-table th:nth-child(4) { color: var(--accent-sg); }
+        
+        /* Matrix Display */
+        .matrix-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            padding: 1rem;
+        }
+        
+        .matrix {
+            display: inline-block;
+            position: relative;
+            padding: 0.5rem 1rem;
+        }
+        
+        .matrix::before,
+        .matrix::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            border: 2px solid var(--text-primary);
+        }
+        
+        .matrix::before {
+            left: 0;
+            border-right: none;
+            border-radius: 4px 0 0 4px;
+        }
+        
+        .matrix::after {
+            right: 0;
+            border-left: none;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .matrix-content {
+            font-family: 'Source Code Pro', monospace;
+            white-space: pre;
+            line-height: 1.6;
+        }
+        
+        /* Notes */
+        .note {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid var(--accent-gfl);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .note-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .model-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Infinite Bus 接続モデルの状態空間表現</h1>
+        <p class="subtitle">GFL (Grid-Following) / GFM (Grid-Forming) / SG (Synchronous Generator) の比較</p>
+        
+        <!-- Model Overview Cards -->
+        <div class="model-grid">
+            <div class="model-card gfl">
+                <div class="model-header">
+                    <span class="model-badge">GFL</span>
+                    <span class="model-name">Grid-Following Inverter</span>
+                </div>
+                <p>系統電圧に追従するインバータ。PLLで系統位相を検出し、電流制御を行う。</p>
+                <div class="dim-box">
+                    <div class="dim-item">
+                        <div class="dim-value">28</div>
+                        <div class="dim-label">状態数</div>
+                    </div>
+                    <div class="dim-item">
+                        <div class="dim-value">5</div>
+                        <div class="dim-label">入力数</div>
+                    </div>
+                    <div class="dim-item">
+                        <div class="dim-value">7</div>
+                        <div class="dim-label">出力数</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="model-card gfm">
+                <div class="model-header">
+                    <span class="model-badge">GFM</span>
+                    <span class="model-name">Grid-Forming Inverter</span>
+                </div>
+                <p>自ら電圧・周波数を形成するインバータ。VSG制御やドループ制御を使用。</p>
+                <div class="dim-box">
+                    <div class="dim-item">
+                        <div class="dim-value">28</div>
+                        <div class="dim-label">状態数</div>
+                    </div>
+                    <div class="dim-item">
+                        <div class="dim-value">5</div>
+                        <div class="dim-label">入力数</div>
+                    </div>
+                    <div class="dim-item">
+                        <div class="dim-value">7</div>
+                        <div class="dim-label">出力数</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="model-card sg">
+                <div class="model-header">
+                    <span class="model-badge">SG</span>
+                    <span class="model-name">Synchronous Generator</span>
+                </div>
+                <p>従来型の同期発電機。機械的慣性と電磁気的特性を持つ。</p>
+                <div class="dim-box">
+                    <div class="dim-item">
+                        <div class="dim-value">19</div>
+                        <div class="dim-label">状態数</div>
+                    </div>
+                    <div class="dim-item">
+                        <div class="dim-value">6</div>
+                        <div class="dim-label">入力数</div>
+                    </div>
+                    <div class="dim-item">
+                        <div class="dim-value">8</div>
+                        <div class="dim-label">出力数</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Descriptor State Space -->
+        <div class="section">
+            <h2>ディスクリプタ状態空間表現</h2>
+            
+            <div class="equation-box">
+                <div class="equation-title">一般形</div>
+                <div class="equation">
+E ẋ = A x + B u<br>
+y = C x + D u
+                </div>
+            </div>
+            
+            <p>E行列が単位行列でない場合、代数変数（微分方程式を持たない変数）が存在します。E行列の対角要素が0の行に対応する状態は代数変数です。</p>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--apparatus1);"></div>
+                    <span>Apparatus 1 (Infinite Bus)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--apparatus2);"></div>
+                    <span>Apparatus 2 (GFL/GFM/SG)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--network);"></div>
+                    <span>Network (送電線)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #a78bfa;"></div>
+                    <span>入力 u</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fbbf24;"></div>
+                    <span>出力 y</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- GFL Model Detail -->
+        <div class="section">
+            <h2 style="color: var(--accent-gfl);">1. GFL (Grid-Following) インバータモデル</h2>
+            
+            <h3>システム構成図</h3>
+            <div class="diagram-container">
+                <svg class="diagram-svg" viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Background -->
+                    <rect width="900" height="400" fill="#12121a"/>
+                    
+                    <!-- Infinite Bus -->
+                    <g transform="translate(50, 150)">
+                        <rect x="0" y="0" width="120" height="100" rx="8" fill="#1a1a24" stroke="#6366f1" stroke-width="2"/>
+                        <text x="60" y="35" text-anchor="middle" fill="#6366f1" font-weight="bold" font-size="14">Infinite Bus</text>
+                        <text x="60" y="55" text-anchor="middle" fill="#9898a8" font-size="11">V∠0°</text>
+                        <text x="60" y="75" text-anchor="middle" fill="#9898a8" font-size="11">ω = ω₀</text>
+                        <circle cx="120" cy="50" r="6" fill="#6366f1"/>
+                    </g>
+                    
+                    <!-- Transmission Line -->
+                    <g transform="translate(180, 180)">
+                        <line x1="0" y1="20" x2="150" y2="20" stroke="#06b6d4" stroke-width="3"/>
+                        <rect x="40" y="5" width="70" height="30" rx="4" fill="#1a1a24" stroke="#06b6d4" stroke-width="1"/>
+                        <text x="75" y="25" text-anchor="middle" fill="#06b6d4" font-size="11">Z_line</text>
+                        <text x="75" y="55" text-anchor="middle" fill="#9898a8" font-size="10">id1-2, iq1-2</text>
+                    </g>
+                    
+                    <!-- GFL Inverter -->
+                    <g transform="translate(340, 80)">
+                        <rect x="0" y="0" width="280" height="240" rx="8" fill="#1a1a24" stroke="#ec4899" stroke-width="2"/>
+                        <text x="140" y="25" text-anchor="middle" fill="#ec4899" font-weight="bold" font-size="14">GFL Inverter</text>
+                        
+                        <!-- PLL Block -->
+                        <rect x="20" y="45" width="100" height="50" rx="4" fill="#2a2a3a" stroke="#ec4899" stroke-width="1"/>
+                        <text x="70" y="70" text-anchor="middle" fill="#e8e8ec" font-size="11">PLL</text>
+                        <text x="70" y="85" text-anchor="middle" fill="#9898a8" font-size="9">ε₂, ω₂, θ₂</text>
+                        
+                        <!-- Current Controller -->
+                        <rect x="150" y="45" width="110" height="50" rx="4" fill="#2a2a3a" stroke="#ec4899" stroke-width="1"/>
+                        <text x="205" y="65" text-anchor="middle" fill="#e8e8ec" font-size="11">Current Ctrl</text>
+                        <text x="205" y="82" text-anchor="middle" fill="#9898a8" font-size="9">i_ld_i, i_lq_i</text>
+                        
+                        <!-- Voltage Controller -->
+                        <rect x="20" y="110" width="100" height="50" rx="4" fill="#2a2a3a" stroke="#ec4899" stroke-width="1"/>
+                        <text x="70" y="130" text-anchor="middle" fill="#e8e8ec" font-size="11">Voltage Ctrl</text>
+                        <text x="70" y="147" text-anchor="middle" fill="#9898a8" font-size="9">v_od_i, v_oq_i</text>
+                        
+                        <!-- LC Filter -->
+                        <rect x="150" y="110" width="110" height="50" rx="4" fill="#2a2a3a" stroke="#ec4899" stroke-width="1"/>
+                        <text x="205" y="130" text-anchor="middle" fill="#e8e8ec" font-size="11">LC Filter</text>
+                        <text x="205" y="147" text-anchor="middle" fill="#9898a8" font-size="9">i_ld, i_lq, v_od, v_oq</text>
+                        
+                        <!-- Output -->
+                        <rect x="85" y="175" width="110" height="45" rx="4" fill="#2a2a3a" stroke="#ec4899" stroke-width="1"/>
+                        <text x="140" y="195" text-anchor="middle" fill="#e8e8ec" font-size="11">Output</text>
+                        <text x="140" y="212" text-anchor="middle" fill="#9898a8" font-size="9">i_od₂, i_oq₂</text>
+                        
+                        <circle cx="0" cy="120" r="6" fill="#ec4899"/>
+                    </g>
+                    
+                    <!-- Connection line -->
+                    <line x1="330" y1="200" x2="340" y2="200" stroke="#06b6d4" stroke-width="3"/>
+                    
+                    <!-- Inputs -->
+                    <g transform="translate(700, 100)">
+                        <text x="0" y="0" fill="#a78bfa" font-weight="bold" font-size="12">入力 u</text>
+                        <text x="0" y="25" fill="#9898a8" font-size="11">u₁: v_d1</text>
+                        <text x="0" y="45" fill="#9898a8" font-size="11">u₂: v_q1</text>
+                        <text x="0" y="65" fill="#9898a8" font-size="11">u₃: v_d2</text>
+                        <text x="0" y="85" fill="#9898a8" font-size="11">u₄: v_q2</text>
+                        <text x="0" y="105" fill="#9898a8" font-size="11">u₅: P₀₂ (有効電力指令)</text>
+                    </g>
+                    
+                    <!-- Outputs -->
+                    <g transform="translate(700, 240)">
+                        <text x="0" y="0" fill="#fbbf24" font-weight="bold" font-size="12">出力 y</text>
+                        <text x="0" y="25" fill="#9898a8" font-size="11">y₁: i_d1, y₂: i_q1</text>
+                        <text x="0" y="45" fill="#9898a8" font-size="11">y₃: ω₁</text>
+                        <text x="0" y="65" fill="#9898a8" font-size="11">y₄: i_d2, y₅: i_q2</text>
+                        <text x="0" y="85" fill="#9898a8" font-size="11">y₆: ω₂, y₇: θ₂</text>
+                    </g>
+                </svg>
+            </div>
+            
+            <h3>状態変数一覧（28状態）</h3>
+            <table class="state-table">
+                <thead>
+                    <tr>
+                        <th>Index</th>
+                        <th>変数名</th>
+                        <th>説明</th>
+                        <th>区分</th>
+                        <th>E行列</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="state-index var-apparatus1">x₁</td>
+                        <td class="var-apparatus1">ξ₁</td>
+                        <td>Infinite Bus 代数変数1</td>
+                        <td>Apparatus 1</td>
+                        <td>0 (代数)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus1">x₂</td>
+                        <td class="var-apparatus1">ξ₂</td>
+                        <td>Infinite Bus 代数変数2</td>
+                        <td>Apparatus 1</td>
+                        <td>0 (代数)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₃</td>
+                        <td class="var-apparatus2">ε₂</td>
+                        <td>PLL積分器状態</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₄</td>
+                        <td class="var-apparatus2">i_ld2</td>
+                        <td>インダクタ電流 d軸</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₅</td>
+                        <td class="var-apparatus2">i_lq2</td>
+                        <td>インダクタ電流 q軸</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₆</td>
+                        <td class="var-apparatus2">i_ld_i2</td>
+                        <td>電流制御積分器 d軸</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₇</td>
+                        <td class="var-apparatus2">i_lq_i2</td>
+                        <td>電流制御積分器 q軸</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₈</td>
+                        <td class="var-apparatus2">v_od2</td>
+                        <td>コンデンサ電圧 d軸</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₉</td>
+                        <td class="var-apparatus2">v_oq2</td>
+                        <td>コンデンサ電圧 q軸</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₁₀</td>
+                        <td class="var-apparatus2">v_od_i2</td>
+                        <td>電圧制御積分器 d軸</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₁₁</td>
+                        <td class="var-apparatus2">v_oq_i2</td>
+                        <td>電圧制御積分器 q軸</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₁₂</td>
+                        <td class="var-apparatus2">i_od2</td>
+                        <td>出力電流 d軸</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₁₃</td>
+                        <td class="var-apparatus2">i_oq2</td>
+                        <td>出力電流 q軸</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₁₄</td>
+                        <td class="var-apparatus2">v_d_ref2</td>
+                        <td>電圧指令値</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₁₅</td>
+                        <td class="var-apparatus2">ω₂</td>
+                        <td>PLL出力周波数</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₁₆</td>
+                        <td class="var-apparatus2">θ₂</td>
+                        <td>PLL出力位相角</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-network">x₁₇-x₂₄</td>
+                        <td class="var-network">id1-2, iq1-2</td>
+                        <td>送電線電流（4組）</td>
+                        <td>Network</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-network">x₂₅-x₂₈</td>
+                        <td class="var-network">ξ₁-ξ₄</td>
+                        <td>ネットワーク代数変数</td>
+                        <td>Network</td>
+                        <td>0 (代数)</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>PLLの動特性</h3>
+            <div class="equation-box">
+                <div class="equation">
+<span class="var-apparatus2">ε̇₂</span> = v_q (PLLへの入力、q軸電圧)<br>
+<span class="var-apparatus2">ω̇₂</span> = K_pll · v_q + K_i,pll · <span class="var-apparatus2">ε₂</span> − τ_pll · <span class="var-apparatus2">ω₂</span><br>
+<span class="var-apparatus2">θ̇₂</span> = <span class="var-apparatus2">ω₂</span>
+                </div>
+            </div>
+            
+            <h3>LCフィルタの動特性</h3>
+            <div class="equation-box">
+                <div class="equation">
+L_f · <span class="var-apparatus2">i̇_ld2</span> = v_inv,d − <span class="var-apparatus2">v_od2</span> − R_f · <span class="var-apparatus2">i_ld2</span> + ω · L_f · <span class="var-apparatus2">i_lq2</span><br>
+L_f · <span class="var-apparatus2">i̇_lq2</span> = v_inv,q − <span class="var-apparatus2">v_oq2</span> − R_f · <span class="var-apparatus2">i_lq2</span> − ω · L_f · <span class="var-apparatus2">i_ld2</span><br>
+C_f · <span class="var-apparatus2">v̇_od2</span> = <span class="var-apparatus2">i_ld2</span> − <span class="var-apparatus2">i_od2</span> + ω · C_f · <span class="var-apparatus2">v_oq2</span><br>
+C_f · <span class="var-apparatus2">v̇_oq2</span> = <span class="var-apparatus2">i_lq2</span> − <span class="var-apparatus2">i_oq2</span> − ω · C_f · <span class="var-apparatus2">v_od2</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- GFM Model Detail -->
+        <div class="section">
+            <h2 style="color: var(--accent-gfm);">2. GFM (Grid-Forming) インバータモデル</h2>
+            
+            <h3>システム構成図</h3>
+            <div class="diagram-container">
+                <svg class="diagram-svg" viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="900" height="400" fill="#12121a"/>
+                    
+                    <!-- Infinite Bus -->
+                    <g transform="translate(50, 150)">
+                        <rect x="0" y="0" width="120" height="100" rx="8" fill="#1a1a24" stroke="#6366f1" stroke-width="2"/>
+                        <text x="60" y="35" text-anchor="middle" fill="#6366f1" font-weight="bold" font-size="14">Infinite Bus</text>
+                        <text x="60" y="55" text-anchor="middle" fill="#9898a8" font-size="11">V∠0°</text>
+                        <text x="60" y="75" text-anchor="middle" fill="#9898a8" font-size="11">ω = ω₀</text>
+                        <circle cx="120" cy="50" r="6" fill="#6366f1"/>
+                    </g>
+                    
+                    <!-- Transmission Line -->
+                    <g transform="translate(180, 180)">
+                        <line x1="0" y1="20" x2="150" y2="20" stroke="#06b6d4" stroke-width="3"/>
+                        <rect x="40" y="5" width="70" height="30" rx="4" fill="#1a1a24" stroke="#06b6d4" stroke-width="1"/>
+                        <text x="75" y="25" text-anchor="middle" fill="#06b6d4" font-size="11">Z_line</text>
+                    </g>
+                    
+                    <!-- GFM Inverter -->
+                    <g transform="translate(340, 80)">
+                        <rect x="0" y="0" width="280" height="240" rx="8" fill="#1a1a24" stroke="#10b981" stroke-width="2"/>
+                        <text x="140" y="25" text-anchor="middle" fill="#10b981" font-weight="bold" font-size="14">GFM Inverter (VSG/Droop)</text>
+                        
+                        <!-- Power Controller -->
+                        <rect x="20" y="45" width="120" height="50" rx="4" fill="#2a2a3a" stroke="#10b981" stroke-width="1"/>
+                        <text x="80" y="65" text-anchor="middle" fill="#e8e8ec" font-size="11">Power Controller</text>
+                        <text x="80" y="82" text-anchor="middle" fill="#9898a8" font-size="9">P-ω droop / VSG</text>
+                        
+                        <!-- Voltage Controller -->
+                        <rect x="150" y="45" width="110" height="50" rx="4" fill="#2a2a3a" stroke="#10b981" stroke-width="1"/>
+                        <text x="205" y="65" text-anchor="middle" fill="#e8e8ec" font-size="11">Voltage Ctrl</text>
+                        <text x="205" y="82" text-anchor="middle" fill="#9898a8" font-size="9">Q-V droop</text>
+                        
+                        <!-- Current Controller -->
+                        <rect x="20" y="110" width="120" height="50" rx="4" fill="#2a2a3a" stroke="#10b981" stroke-width="1"/>
+                        <text x="80" y="130" text-anchor="middle" fill="#e8e8ec" font-size="11">Current Ctrl</text>
+                        <text x="80" y="147" text-anchor="middle" fill="#9898a8" font-size="9">Inner loop</text>
+                        
+                        <!-- LC Filter -->
+                        <rect x="150" y="110" width="110" height="50" rx="4" fill="#2a2a3a" stroke="#10b981" stroke-width="1"/>
+                        <text x="205" y="130" text-anchor="middle" fill="#e8e8ec" font-size="11">LC Filter</text>
+                        <text x="205" y="147" text-anchor="middle" fill="#9898a8" font-size="9">Physical plant</text>
+                        
+                        <!-- Output -->
+                        <rect x="85" y="175" width="110" height="45" rx="4" fill="#2a2a3a" stroke="#10b981" stroke-width="1"/>
+                        <text x="140" y="195" text-anchor="middle" fill="#e8e8ec" font-size="11">Output</text>
+                        <text x="140" y="212" text-anchor="middle" fill="#9898a8" font-size="9">i_od₂, i_oq₂</text>
+                        
+                        <circle cx="0" cy="120" r="6" fill="#10b981"/>
+                    </g>
+                    
+                    <line x1="330" y1="200" x2="340" y2="200" stroke="#06b6d4" stroke-width="3"/>
+                    
+                    <!-- Key difference -->
+                    <g transform="translate(650, 100)">
+                        <rect x="0" y="0" width="200" height="100" rx="8" fill="rgba(16, 185, 129, 0.1)" stroke="#10b981" stroke-width="1"/>
+                        <text x="100" y="25" text-anchor="middle" fill="#10b981" font-weight="bold" font-size="12">GFMの特徴</text>
+                        <text x="10" y="50" fill="#e8e8ec" font-size="11">• 電圧源として動作</text>
+                        <text x="10" y="70" fill="#e8e8ec" font-size="11">• 自ら周波数を生成</text>
+                        <text x="10" y="90" fill="#e8e8ec" font-size="11">• 慣性応答を模擬</text>
+                    </g>
+                    
+                    <!-- Outputs -->
+                    <g transform="translate(650, 230)">
+                        <text x="0" y="0" fill="#fbbf24" font-weight="bold" font-size="12">出力 y (GFLと同じ)</text>
+                        <text x="0" y="25" fill="#9898a8" font-size="11">y₁-y₂: i_d1, i_q1</text>
+                        <text x="0" y="45" fill="#9898a8" font-size="11">y₃: ω₁</text>
+                        <text x="0" y="65" fill="#9898a8" font-size="11">y₄-y₅: i_d2, i_q2</text>
+                        <text x="0" y="85" fill="#9898a8" font-size="11">y₆-y₇: ω₂, θ₂</text>
+                    </g>
+                </svg>
+            </div>
+            
+            <h3>状態変数一覧（28状態）</h3>
+            <p>GFLと同じ28状態構造。主な違いは制御方式にあり、PLLの代わりにドループ制御またはVSG制御を使用。</p>
+            
+            <div class="note">
+                <div class="note-title">GFL vs GFM の本質的な違い</div>
+                <p><strong>GFL</strong>: PLLで系統位相を「追従」→ 電流源として動作<br>
+                <strong>GFM</strong>: ドループ/VSGで位相を「生成」→ 電圧源として動作</p>
+            </div>
+            
+            <h3>ドループ制御 (P-ω)</h3>
+            <div class="equation-box">
+                <div class="equation">
+<span class="var-apparatus2">ω₂</span> = ω₀ − m_p · (P − P₀)<br>
+<span class="var-apparatus2">θ̇₂</span> = <span class="var-apparatus2">ω₂</span>
+                </div>
+            </div>
+            
+            <h3>VSG制御（仮想同期機）</h3>
+            <div class="equation-box">
+                <div class="equation">
+J · <span class="var-apparatus2">ω̇₂</span> = P_m − P_e − D · (<span class="var-apparatus2">ω₂</span> − ω₀)<br>
+<span class="var-apparatus2">θ̇₂</span> = <span class="var-apparatus2">ω₂</span>
+                </div>
+            </div>
+            <p>ここで J: 仮想慣性、D: ダンピング係数、P_m: 機械入力相当、P_e: 電気出力</p>
+        </div>
+        
+        <!-- SG Model Detail -->
+        <div class="section">
+            <h2 style="color: var(--accent-sg);">3. SG (Synchronous Generator) 同期発電機モデル</h2>
+            
+            <h3>システム構成図</h3>
+            <div class="diagram-container">
+                <svg class="diagram-svg" viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="900" height="400" fill="#12121a"/>
+                    
+                    <!-- Infinite Bus -->
+                    <g transform="translate(50, 150)">
+                        <rect x="0" y="0" width="120" height="100" rx="8" fill="#1a1a24" stroke="#6366f1" stroke-width="2"/>
+                        <text x="60" y="35" text-anchor="middle" fill="#6366f1" font-weight="bold" font-size="14">Infinite Bus</text>
+                        <text x="60" y="55" text-anchor="middle" fill="#9898a8" font-size="11">V∠0°</text>
+                        <circle cx="120" cy="50" r="6" fill="#6366f1"/>
+                    </g>
+                    
+                    <!-- Transmission Line -->
+                    <g transform="translate(180, 180)">
+                        <line x1="0" y1="20" x2="150" y2="20" stroke="#06b6d4" stroke-width="3"/>
+                        <rect x="40" y="5" width="70" height="30" rx="4" fill="#1a1a24" stroke="#06b6d4" stroke-width="1"/>
+                        <text x="75" y="25" text-anchor="middle" fill="#06b6d4" font-size="11">Z_line</text>
+                    </g>
+                    
+                    <!-- Synchronous Generator -->
+                    <g transform="translate(340, 80)">
+                        <rect x="0" y="0" width="280" height="240" rx="8" fill="#1a1a24" stroke="#f59e0b" stroke-width="2"/>
+                        <text x="140" y="25" text-anchor="middle" fill="#f59e0b" font-weight="bold" font-size="14">Synchronous Generator</text>
+                        
+                        <!-- Mechanical -->
+                        <rect x="20" y="50" width="120" height="70" rx="4" fill="#2a2a3a" stroke="#f59e0b" stroke-width="1"/>
+                        <text x="80" y="75" text-anchor="middle" fill="#e8e8ec" font-size="11">Mechanical</text>
+                        <text x="80" y="95" text-anchor="middle" fill="#9898a8" font-size="9">ω₂, θ₂</text>
+                        <text x="80" y="110" text-anchor="middle" fill="#9898a8" font-size="9">J·ω̇ = Tm − Te − D·ω</text>
+                        
+                        <!-- Electrical -->
+                        <rect x="150" y="50" width="110" height="70" rx="4" fill="#2a2a3a" stroke="#f59e0b" stroke-width="1"/>
+                        <text x="205" y="75" text-anchor="middle" fill="#e8e8ec" font-size="11">Electrical</text>
+                        <text x="205" y="95" text-anchor="middle" fill="#9898a8" font-size="9">i_d2, i_q2</text>
+                        <text x="205" y="110" text-anchor="middle" fill="#9898a8" font-size="9">ε₂ (界磁)</text>
+                        
+                        <!-- Exciter input -->
+                        <rect x="85" y="140" width="110" height="45" rx="4" fill="#2a2a3a" stroke="#f59e0b" stroke-width="1"/>
+                        <text x="140" y="160" text-anchor="middle" fill="#e8e8ec" font-size="11">Exciter</text>
+                        <text x="140" y="177" text-anchor="middle" fill="#9898a8" font-size="9">v_ex → i_ex</text>
+                        
+                        <!-- Output -->
+                        <rect x="85" y="195" width="110" height="35" rx="4" fill="#2a2a3a" stroke="#f59e0b" stroke-width="1"/>
+                        <text x="140" y="217" text-anchor="middle" fill="#e8e8ec" font-size="11">P, Q output</text>
+                        
+                        <circle cx="0" cy="120" r="6" fill="#f59e0b"/>
+                    </g>
+                    
+                    <line x1="330" y1="200" x2="340" y2="200" stroke="#06b6d4" stroke-width="3"/>
+                    
+                    <!-- Inputs -->
+                    <g transform="translate(650, 80)">
+                        <text x="0" y="0" fill="#a78bfa" font-weight="bold" font-size="12">入力 u (6個)</text>
+                        <text x="0" y="25" fill="#9898a8" font-size="11">u₁: v_d1</text>
+                        <text x="0" y="45" fill="#9898a8" font-size="11">u₂: v_q1</text>
+                        <text x="0" y="65" fill="#9898a8" font-size="11">u₃: v_d2</text>
+                        <text x="0" y="85" fill="#9898a8" font-size="11">u₄: v_q2</text>
+                        <text x="0" y="105" fill="#f59e0b" font-size="11">u₅: T_m2 (機械トルク)</text>
+                        <text x="0" y="125" fill="#f59e0b" font-size="11">u₆: v_ex2 (励磁電圧)</text>
+                    </g>
+                    
+                    <!-- Outputs -->
+                    <g transform="translate(650, 230)">
+                        <text x="0" y="0" fill="#fbbf24" font-weight="bold" font-size="12">出力 y (8個)</text>
+                        <text x="0" y="25" fill="#9898a8" font-size="11">y₁-y₂: i_d1, i_q1</text>
+                        <text x="0" y="45" fill="#9898a8" font-size="11">y₃: ω₁</text>
+                        <text x="0" y="65" fill="#9898a8" font-size="11">y₄-y₅: i_d2, i_q2</text>
+                        <text x="0" y="85" fill="#9898a8" font-size="11">y₆: ω₂</text>
+                        <text x="0" y="105" fill="#f59e0b" font-size="11">y₇: i_ex2 (励磁電流)</text>
+                        <text x="0" y="125" fill="#f59e0b" font-size="11">y₈: θ₂</text>
+                    </g>
+                </svg>
+            </div>
+            
+            <h3>状態変数一覧（19状態）</h3>
+            <table class="state-table">
+                <thead>
+                    <tr>
+                        <th>Index</th>
+                        <th>変数名</th>
+                        <th>説明</th>
+                        <th>区分</th>
+                        <th>E行列</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="state-index var-apparatus1">x₁</td>
+                        <td class="var-apparatus1">ξ₁</td>
+                        <td>Infinite Bus 代数変数1</td>
+                        <td>Apparatus 1</td>
+                        <td>0 (代数)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus1">x₂</td>
+                        <td class="var-apparatus1">ξ₂</td>
+                        <td>Infinite Bus 代数変数2</td>
+                        <td>Apparatus 1</td>
+                        <td>0 (代数)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₃</td>
+                        <td class="var-apparatus2">ε₂</td>
+                        <td>界磁巻線磁束（または励磁状態）</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₄</td>
+                        <td class="var-apparatus2">i_d2</td>
+                        <td>固定子電流 d軸</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₅</td>
+                        <td class="var-apparatus2">i_q2</td>
+                        <td>固定子電流 q軸</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₆</td>
+                        <td class="var-apparatus2">ω₂</td>
+                        <td>回転子角速度</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-apparatus2">x₇</td>
+                        <td class="var-apparatus2">θ₂</td>
+                        <td>回転子位相角</td>
+                        <td>Apparatus 2</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-network">x₈-x₁₅</td>
+                        <td class="var-network">id1-2, iq1-2</td>
+                        <td>送電線電流（4組）</td>
+                        <td>Network</td>
+                        <td>1 (微分)</td>
+                    </tr>
+                    <tr>
+                        <td class="state-index var-network">x₁₆-x₁₉</td>
+                        <td class="var-network">ξ₁-ξ₄</td>
+                        <td>ネットワーク代数変数</td>
+                        <td>Network</td>
+                        <td>0 (代数)</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>スイング方程式（機械系）</h3>
+            <div class="equation-box">
+                <div class="equation">
+J · <span class="var-apparatus2">ω̇₂</span> = <span class="var-input">T_m</span> − T_e − D · (<span class="var-apparatus2">ω₂</span> − ω₀)<br>
+<span class="var-apparatus2">θ̇₂</span> = <span class="var-apparatus2">ω₂</span> − ω₀
+                </div>
+            </div>
+            <p>ここで J: 慣性定数、T_m: 機械トルク（入力）、T_e: 電気トルク、D: 制動係数</p>
+            
+            <h3>電気系方程式（簡略モデル）</h3>
+            <div class="equation-box">
+                <div class="equation">
+v_d = −R_s · <span class="var-apparatus2">i_d2</span> + X_q · <span class="var-apparatus2">i_q2</span><br>
+v_q = E_q' − R_s · <span class="var-apparatus2">i_q2</span> − X_d' · <span class="var-apparatus2">i_d2</span><br>
+T'_d0 · Ė_q' = <span class="var-input">v_ex</span> − E_q' − (X_d − X_d') · <span class="var-apparatus2">i_d2</span>
+                </div>
+            </div>
+            <p>ここで E_q': 過渡内部起電力、X_d, X_q: 同期リアクタンス、X_d': 過渡リアクタンス</p>
+        </div>
+        
+        <!-- Comparison Section -->
+        <div class="section">
+            <h2>モデル比較まとめ</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>項目</th>
+                        <th>GFL</th>
+                        <th>GFM</th>
+                        <th>SG</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>状態数</td>
+                        <td>28</td>
+                        <td>28</td>
+                        <td>19</td>
+                    </tr>
+                    <tr>
+                        <td>入力数</td>
+                        <td>5</td>
+                        <td>5</td>
+                        <td>6</td>
+                    </tr>
+                    <tr>
+                        <td>出力数</td>
+                        <td>7</td>
+                        <td>7</td>
+                        <td>8</td>
+                    </tr>
+                    <tr>
+                        <td>Apparatus 2 状態</td>
+                        <td>14 (PLL + LCフィルタ + 制御器)</td>
+                        <td>14 (ドループ + LCフィルタ + 制御器)</td>
+                        <td>5 (機械系 + 電気系)</td>
+                    </tr>
+                    <tr>
+                        <td>位相同期方式</td>
+                        <td>PLL（追従型）</td>
+                        <td>ドループ/VSG（生成型）</td>
+                        <td>物理的同期</td>
+                    </tr>
+                    <tr>
+                        <td>動作モード</td>
+                        <td>電流源</td>
+                        <td>電圧源</td>
+                        <td>電圧源</td>
+                    </tr>
+                    <tr>
+                        <td>慣性</td>
+                        <td>なし</td>
+                        <td>仮想慣性（VSG時）</td>
+                        <td>物理的慣性</td>
+                    </tr>
+                    <tr>
+                        <td>特有の入力</td>
+                        <td>P₀₂ (有効電力指令)</td>
+                        <td>P₀₂ (有効電力指令)</td>
+                        <td>T_m2, v_ex2</td>
+                    </tr>
+                    <tr>
+                        <td>特有の出力</td>
+                        <td>−</td>
+                        <td>−</td>
+                        <td>i_ex2 (励磁電流)</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>状態変数の数の比較</h3>
+            <div class="equation-box">
+                <div class="equation-title">GFL / GFM（28状態）</div>
+                <div class="equation">
+<span class="var-apparatus1">Apparatus 1: 2</span> + <span class="var-apparatus2">Apparatus 2: 14</span> + <span class="var-network">Network: 12</span> = 28
+                </div>
+            </div>
+            
+            <div class="equation-box">
+                <div class="equation-title">SG（19状態）</div>
+                <div class="equation">
+<span class="var-apparatus1">Apparatus 1: 2</span> + <span class="var-apparatus2">Apparatus 2: 5</span> + <span class="var-network">Network: 12</span> = 19
+                </div>
+            </div>
+            
+            <div class="note">
+                <div class="note-title">なぜSGは状態数が少ないか？</div>
+                <p>インバータ（GFL/GFM）は電力変換器内部にLCフィルタと複数の制御ループ（電流制御、電圧制御、PLL/ドループ）を持つため、状態数が多くなります。一方、同期発電機は機械的な慣性系（ω, θ）と電気的な過渡特性（界磁巻線）で記述できるため、状態数が比較的少なくなります。</p>
+            </div>
+        </div>
+        
+        <!-- Matrix Structure -->
+        <div class="section">
+            <h2>行列構造の概要</h2>
+            
+            <h3>A行列の構造（例：GFL 28×28）</h3>
+            <div class="diagram-container">
+                <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="max-width: 600px; margin: 0 auto; display: block;">
+                    <rect width="600" height="400" fill="#12121a"/>
+                    
+                    <!-- Matrix outline -->
+                    <rect x="100" y="50" width="280" height="280" fill="none" stroke="#4a4a5a" stroke-width="2"/>
+                    
+                    <!-- Apparatus 1 block -->
+                    <rect x="100" y="50" width="20" height="20" fill="rgba(99, 102, 241, 0.3)" stroke="#6366f1" stroke-width="1"/>
+                    <text x="110" y="64" text-anchor="middle" fill="#6366f1" font-size="10">A₁</text>
+                    
+                    <!-- Apparatus 2 block -->
+                    <rect x="120" y="70" width="140" height="140" fill="rgba(236, 72, 153, 0.3)" stroke="#ec4899" stroke-width="1"/>
+                    <text x="190" y="145" text-anchor="middle" fill="#ec4899" font-size="12">A₂</text>
+                    <text x="190" y="160" text-anchor="middle" fill="#ec4899" font-size="10">(GFL制御器)</text>
+                    
+                    <!-- Network block -->
+                    <rect x="260" y="210" width="120" height="120" fill="rgba(6, 182, 212, 0.3)" stroke="#06b6d4" stroke-width="1"/>
+                    <text x="320" y="275" text-anchor="middle" fill="#06b6d4" font-size="12">A_net</text>
+                    
+                    <!-- Coupling blocks -->
+                    <rect x="260" y="70" width="120" height="140" fill="rgba(255, 255, 255, 0.05)" stroke="#4a4a5a" stroke-width="1" stroke-dasharray="4"/>
+                    <text x="320" y="145" text-anchor="middle" fill="#9898a8" font-size="10">結合</text>
+                    
+                    <rect x="120" y="210" width="140" height="120" fill="rgba(255, 255, 255, 0.05)" stroke="#4a4a5a" stroke-width="1" stroke-dasharray="4"/>
+                    <text x="190" y="275" text-anchor="middle" fill="#9898a8" font-size="10">結合</text>
+                    
+                    <!-- Labels -->
+                    <text x="110" y="40" fill="#6366f1" font-size="11">x₁-x₂</text>
+                    <text x="190" y="40" fill="#ec4899" font-size="11">x₃-x₁₆</text>
+                    <text x="320" y="40" fill="#06b6d4" font-size="11">x₁₇-x₂₈</text>
+                    
+                    <text x="90" y="64" text-anchor="end" fill="#6366f1" font-size="10">x₁-x₂</text>
+                    <text x="90" y="145" text-anchor="end" fill="#ec4899" font-size="10">x₃-x₁₆</text>
+                    <text x="90" y="275" text-anchor="end" fill="#06b6d4" font-size="10">x₁₇-x₂₈</text>
+                    
+                    <!-- Legend -->
+                    <g transform="translate(420, 80)">
+                        <text x="0" y="0" fill="#e8e8ec" font-weight="bold" font-size="12">凡例</text>
+                        <rect x="0" y="15" width="20" height="15" fill="rgba(99, 102, 241, 0.3)" stroke="#6366f1"/>
+                        <text x="30" y="27" fill="#9898a8" font-size="11">Infinite Bus</text>
+                        <rect x="0" y="40" width="20" height="15" fill="rgba(236, 72, 153, 0.3)" stroke="#ec4899"/>
+                        <text x="30" y="52" fill="#9898a8" font-size="11">GFL/GFM/SG</text>
+                        <rect x="0" y="65" width="20" height="15" fill="rgba(6, 182, 212, 0.3)" stroke="#06b6d4"/>
+                        <text x="30" y="77" fill="#9898a8" font-size="11">Network</text>
+                        <rect x="0" y="90" width="20" height="15" fill="rgba(255, 255, 255, 0.05)" stroke="#4a4a5a" stroke-dasharray="4"/>
+                        <text x="30" y="102" fill="#9898a8" font-size="11">結合項</text>
+                    </g>
+                </svg>
+            </div>
+            
+            <h3>E行列（ディスクリプタ）の構造</h3>
+            <div class="equation-box">
+                <div class="equation">
+E = diag(<span class="var-apparatus1">0, 0</span>, <span class="var-apparatus2">1, 1, ..., 1</span>, <span class="var-network">1, ..., 1, 0, 0, 0, 0</span>)
+                </div>
+            </div>
+            <p>対角要素が0の位置が代数変数（Infinite Busのξ₁,ξ₂とネットワークのξ₁-ξ₄）、1の位置が微分変数です。</p>
+        </div>
+        
+    </div>
+</body>
+</html>
