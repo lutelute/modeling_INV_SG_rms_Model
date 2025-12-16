@@ -6,11 +6,13 @@
 
 ## ファイル構成
 
-- `physical_modeling_v2_3.html` - 物理モデルから状態空間表現への導出を説明するHTMLドキュメント
+- `index.html` - 物理モデルから状態空間表現への導出を説明するHTMLドキュメント
 
 ## 使用方法
 
-HTMLファイルをWebブラウザで開いて、物理モデルの数式展開と状態空間表現への変換過程を確認できます。
+GitHub Pagesでオンライン閲覧：https://lutelute.github.io/modeling_INV_SG_rms_Model/
+
+または、ローカルでHTMLファイルをWebブラウザで開いて、物理モデルの数式展開と状態空間表現への変換過程を確認できます。
 
 ## 特徴
 
